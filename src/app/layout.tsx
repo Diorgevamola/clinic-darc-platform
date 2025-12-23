@@ -17,6 +17,10 @@ import { Toaster } from "@/components/ui/sonner"
 export const metadata: Metadata = {
   title: "AllService AI",
   description: "Plataforma de Gestão de Leads Jurídicos",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({
