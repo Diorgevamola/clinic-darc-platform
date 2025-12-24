@@ -34,12 +34,19 @@ export default function ChatsPage() {
     async function loadChats() {
         setLoadingChats(true);
         setError(null);
-        const res = await fetchChats();
-        if (res.error) {
-            console.error("Chats error:", res.error);
-            setError(res.error);
-        } else if (res.response) {
-            setChats(res.response);
+        try {
+            const res = await fetchChats();
+
+            if (res.error) {
+                console.error("Chats error from server:", res.error);
+                setError(res.error);
+            } else if (res.chats || res.response) {
+                const data = res.chats || res.response || [];
+                setChats(data);
+            }
+        } catch (err) {
+            console.error("Unexpected error in loadChats:", err);
+            setError("Erro inesperado ao carregar chats.");
         }
         setLoadingChats(false);
     }
@@ -47,9 +54,10 @@ export default function ChatsPage() {
     async function loadMessages(chatId: string) {
         setLoadingMessages(true);
         const res = await fetchMessages(chatId);
-        if (res.response) {
+        const data = res.messages || res.response;
+        if (data) {
             // Reverse so oldest is at top for standard chat view
-            setMessages(res.response.reverse());
+            setMessages(data.reverse());
         }
         setLoadingMessages(false);
     }
@@ -94,7 +102,7 @@ export default function ChatsPage() {
                                                 {chat.wa_name || chat.id.split('@')[0]}
                                             </span>
                                             <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-                                                {chat.wa_lastMsgTimestamp ? format(new Date(chat.wa_lastMsgTimestamp * 1000), 'HH:mm', { locale: ptBR }) : ''}
+                                                {chat.wa_lastMsgTimestamp ? format(new Date(chat.wa_lastMsgTimestamp), 'HH:mm', { locale: ptBR }) : ''}
                                             </span>
                                         </div>
                                         <p className="text-xs text-muted-foreground truncate">
@@ -149,7 +157,7 @@ export default function ChatsPage() {
                                         >
                                             <p>{msg.wa_body}</p>
                                             <span className="text-[10px] opacity-70 block text-right mt-1">
-                                                {format(new Date(msg.wa_timestamp * 1000), 'HH:mm')}
+                                                {format(new Date(msg.wa_timestamp), 'HH:mm')}
                                             </span>
                                         </div>
                                     ))

@@ -32,7 +32,9 @@ export interface UazapiMessage {
 }
 
 export interface UazapiResponse<T> {
-    response: T[];
+    response?: T[]; // Some endpoints return this
+    chats?: T[];    // /chat/find might return this
+    messages?: T[]; // /message/find might return this
     pagination?: {
         currentPage: number;
         hasNextPage: boolean;
