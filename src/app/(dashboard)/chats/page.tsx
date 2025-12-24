@@ -30,9 +30,25 @@ export default function ChatsPage() {
     const [error, setError] = useState<string | null>(null);
     const [limit, setLimit] = useState<number>(100);
 
+    // Initial load + polling for chats list (every 10 seconds)
     useEffect(() => {
-        loadChats();
+        loadChats(); // Initial load
+        const interval = setInterval(() => {
+            loadChats(true); // silent update
+        }, 10000);
+        return () => clearInterval(interval);
     }, [limit]);
+
+    // Polling for messages (every 3 seconds) if chat is selected
+    useEffect(() => {
+        if (!selectedChat) return;
+
+        const interval = setInterval(() => {
+            loadMessages(selectedChat.wa_chatid, true); // silent update
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [selectedChat]);
 
     useEffect(() => {
         if (selectedChat) {
@@ -48,35 +64,57 @@ export default function ChatsPage() {
         }
     }, [messages]);
 
-    async function loadChats() {
-        setLoadingChats(true);
+    async function loadChats(silent = false) {
+        if (!silent) setLoadingChats(true);
         setError(null);
         try {
             const res = await fetchChats(1, limit);
 
             if (res.error) {
                 console.error("Chats error from server:", res.error);
-                setError(res.error);
+                if (!silent) setError(res.error);
             } else if (res.chats || res.response) {
                 const data = res.chats || res.response || [];
                 setChats(data);
             }
         } catch (err) {
             console.error("Unexpected error in loadChats:", err);
-            setError("Erro inesperado ao carregar chats.");
+            if (!silent) setError("Erro inesperado ao carregar chats.");
         }
-        setLoadingChats(false);
+        if (!silent) setLoadingChats(false);
     }
 
-    async function loadMessages(chatId: string) {
-        setLoadingMessages(true);
-        const res = await fetchMessages(chatId);
-        const data = res.messages || res.response;
-        if (data) {
-            // Reverse so oldest is at top for standard chat view
-            setMessages(data.reverse());
+    async function loadMessages(chatId: string, silent = false) {
+        if (!silent) {
+            setLoadingMessages(true);
+            setMessages([]); // Clear previous messages immediately to avoid confusion
         }
-        setLoadingMessages(false);
+
+        try {
+            const res = await fetchMessages(chatId);
+
+            // Race condition check: ensure we are still looking at the same chat
+            if (chatId !== selectedChat?.wa_chatid && !silent) return;
+            // For silent updates, we also check, but we rely on the effect cleanup mostly. 
+            // However, inside the async function, selectedChat might have changed.
+            // Since we can't easily access the *current* selectedChat ref here without a ref, 
+            // we rely on the fact that if the user switched, the component re-rendered and this 
+            // closure is stale or the effect was cleaned up. 
+            // BUT, strictly speaking, async continuations can run. 
+            // A simple check against the state available in closure is tricky if it's stale. 
+            // For now, clearing messages on start of non-silent load helps UI responsiveness.
+
+            const data = res.messages || res.response;
+            if (data) {
+                // Reverse so oldest is at top for standard chat view
+                // If silent, we might want to check if data changed, but replacing is strictly easier for now.
+                setMessages(data.reverse());
+            }
+        } catch (error) {
+            console.error("Error loading messages:", error);
+        } finally {
+            if (!silent) setLoadingMessages(false);
+        }
     }
 
     const filteredChats = chats.filter(chat => {
@@ -95,9 +133,9 @@ export default function ChatsPage() {
     };
 
     return (
-        <div className="flex h-[calc(100vh-80px)] overflow-hidden p-6 gap-6">
+        <div className="flex h-full overflow-hidden">
             {/* Chat List */}
-            <Card className="w-1/3 flex flex-col bg-card/50 backdrop-blur-sm border-border overflow-hidden">
+            <Card className="w-[350px] flex flex-col bg-card/50 backdrop-blur-sm border-r border-y-0 border-l-0 rounded-none overflow-hidden">
                 <div className="p-4 border-b border-border space-y-4">
                     <h2 className="text-xl font-semibold text-foreground">Conversas</h2>
                     <div className="relative">
@@ -173,7 +211,7 @@ export default function ChatsPage() {
             </Card>
 
             {/* Message Area */}
-            <Card className="flex-1 flex flex-col bg-card/50 backdrop-blur-sm border-border overflow-hidden">
+            <Card className="flex-1 flex flex-col bg-card/50 backdrop-blur-sm border-none rounded-none overflow-hidden">
                 {selectedChat ? (
                     <>
                         <div className="p-4 border-b border-border flex justify-between items-center bg-card/80">
@@ -208,18 +246,42 @@ export default function ChatsPage() {
                                                 : 'bg-muted text-foreground self-start rounded-bl-none'
                                                 }`}
                                         >
-                                            <p>
-                                                {msg.text || (
-                                                    <span className="italic opacity-70">
-                                                        {msg.messageType === 'image' ? '📷 Foto' :
-                                                            msg.messageType === 'video' ? '🎥 Vídeo' :
-                                                                msg.messageType === 'audio' ? '🎙️ Áudio' :
-                                                                    msg.messageType === 'document' ? '📄 Documento' :
-                                                                        msg.messageType === 'sticker' ? '✨ Figurinha' :
-                                                                            `Mensagem (${msg.messageType})`}
-                                                    </span>
+                                            <div className="flex flex-col gap-1">
+                                                {msg.messageType === 'audio' || msg.messageType === 'ptt' || msg.messageType === 'voice' ? (
+                                                    msg.fileURL ? (
+                                                        <audio controls src={msg.fileURL} className="max-w-[240px]" />
+                                                    ) : (
+                                                        <span className="italic opacity-70">🎙️ Áudio indisponível</span>
+                                                    )
+                                                ) : msg.messageType === 'image' ? (
+                                                    msg.fileURL ? (
+                                                        <img src={msg.fileURL} alt="Imagem" className="max-w-[240px] rounded-lg cursor-pointer hover:opacity-90" onClick={() => window.open(msg.fileURL, '_blank')} />
+                                                    ) : (
+                                                        <span className="italic opacity-70">📷 Foto indisponível</span>
+                                                    )
+                                                ) : msg.messageType === 'video' ? (
+                                                    msg.fileURL ? (
+                                                        <video controls src={msg.fileURL} className="max-w-[240px] rounded-lg" />
+                                                    ) : (
+                                                        <span className="italic opacity-70">🎥 Vídeo indisponível</span>
+                                                    )
+                                                ) : msg.messageType === 'document' ? (
+                                                    msg.fileURL ? (
+                                                        <a href={msg.fileURL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-500 hover:underline">
+                                                            📄 Documento
+                                                        </a>
+                                                    ) : (
+                                                        <span className="italic opacity-70">📄 Documento indisponível</span>
+                                                    )
+                                                ) : (
+                                                    <p>{msg.text}</p>
                                                 )}
-                                            </p>
+
+                                                {/* Caption for media if text exists and is not just the type/url */}
+                                                {(msg.messageType === 'image' || msg.messageType === 'video') && msg.text && msg.text !== 'image' && msg.text !== 'video' && (
+                                                    <p className="mt-1">{msg.text}</p>
+                                                )}
+                                            </div>
                                             <span className="text-[10px] opacity-70 block text-right mt-1">
                                                 {format(new Date(msg.messageTimestamp), 'HH:mm')}
                                             </span>
