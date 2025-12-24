@@ -11,6 +11,13 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MessageSquare, Phone, MoreVertical, Search } from 'lucide-react';
 import { Input } from "@/components/ui/input";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 export default function ChatsPage() {
     const [chats, setChats] = useState<UazapiChat[]>([]);
@@ -21,10 +28,11 @@ export default function ChatsPage() {
     const [searchQuery, setSearchQuery] = useState('');
 
     const [error, setError] = useState<string | null>(null);
+    const [limit, setLimit] = useState<number>(100);
 
     useEffect(() => {
         loadChats();
-    }, []);
+    }, [limit]);
 
     useEffect(() => {
         if (selectedChat) {
@@ -44,7 +52,7 @@ export default function ChatsPage() {
         setLoadingChats(true);
         setError(null);
         try {
-            const res = await fetchChats();
+            const res = await fetchChats(1, limit);
 
             if (res.error) {
                 console.error("Chats error from server:", res.error);
@@ -148,6 +156,20 @@ export default function ChatsPage() {
                         </div>
                     )}
                 </ScrollArea>
+                <div className="p-2 border-t border-border flex justify-end items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">Mostrar:</span>
+                    <Select value={limit.toString()} onValueChange={(v) => setLimit(parseInt(v))}>
+                        <SelectTrigger className="w-[100px] h-7 bg-transparent border-border text-[10px]">
+                            <SelectValue placeholder="Linhas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="100">100 chats</SelectItem>
+                            <SelectItem value="500">500 chats</SelectItem>
+                            <SelectItem value="1000">1000 chats</SelectItem>
+                            <SelectItem value="0">Todos</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </Card>
 
             {/* Message Area */}
