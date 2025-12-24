@@ -272,3 +272,32 @@ export async function toggleLeadAI(phone: string, isEnabled: boolean) {
         return { success: false, error: error.message };
     }
 }
+
+export async function resendLatestMessages(name: string, phone: string, text: string) {
+    try {
+        const webhookUrl = 'https://n8n-n8n.0js9zt.easypanel.host/webhook/reenvio_mensagem_allservice_adv';
+
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name,
+                phone: phone.replace(/\D/g, ''),
+                text
+            })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`resendLatestMessages Webhook Error: ${response.status} - ${errorText}`);
+            throw new Error(`Falha no webhook: ${response.status}`);
+        }
+
+        return { success: true };
+    } catch (error: any) {
+        console.error("resendLatestMessages error:", error);
+        return { success: false, error: error.message };
+    }
+}

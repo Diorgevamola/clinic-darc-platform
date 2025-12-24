@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { fetchChats, fetchMessages, getLeadDetails, sendMessage, deleteMessage, toggleLeadAI } from './actions';
+import { fetchChats, fetchMessages, getLeadDetails, sendMessage, deleteMessage, toggleLeadAI, resendLatestMessages } from './actions';
 import { UazapiChat, UazapiMessage } from '@/lib/uazapi';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
@@ -17,7 +17,8 @@ import {
     Trash2,
     Plus,
     Bot,
-    Loader2
+    Loader2,
+    SendHorizonal
 } from 'lucide-react';
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
@@ -56,6 +57,7 @@ export default function ChatsPage() {
     // AI FAB State
     const [isFabOpen, setIsFabOpen] = useState(false);
     const [isAIEnabled, setIsAIEnabled] = useState(false);
+    const [isResending, setIsResending] = useState(false);
 
     // Initial load
     useEffect(() => {
@@ -262,6 +264,45 @@ export default function ChatsPage() {
         } else {
             setIsAIEnabled(prev);
             toast.error("Erro ao alterar status da IA");
+        }
+    }
+
+    async function handleResendMessages() {
+        if (!selectedChat || messages.length === 0) return;
+
+        setIsResending(true);
+        try {
+            // Traverse from newest to oldest to find consecutive client messages
+            const clientMessages = [];
+            for (let i = messages.length - 1; i >= 0; i--) {
+                const msg = messages[i];
+                if (msg.fromMe === false) {
+                    clientMessages.unshift(msg.text || '');
+                } else {
+                    break;
+                }
+            }
+
+            if (clientMessages.length === 0) {
+                toast.error("Nenhuma mensagem recente do cliente encontrada.");
+                return;
+            }
+
+            const consolidatedText = clientMessages.join('\n');
+            const name = selectedChat.wa_name || selectedChat.wa_contactName || selectedChat.name || "Sem Nome";
+            const phone = selectedChat.phone || selectedChat.wa_chatid.split('@')[0];
+
+            const res = await resendLatestMessages(name, phone, consolidatedText);
+            if (res.success) {
+                toast.success("Mensagens reenviadas para o n8n!");
+            } else {
+                toast.error(`Falha no reenvio: ${res.error}`);
+            }
+        } catch (e: any) {
+            console.error("Resend error:", e);
+            toast.error("Erro interno ao reenviar mensagens");
+        } finally {
+            setIsResending(false);
         }
     }
 
@@ -625,10 +666,24 @@ export default function ChatsPage() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="p-4 text-center border border-dashed border-border rounded-lg">
-                                <p className="text-sm text-muted-foreground">
-                                    Lead não encontrado na base de dados para este telefone.
-                                </p>
+                            <div className="space-y-4">
+                                <div className="p-4 text-center border border-dashed border-border rounded-lg bg-muted/20">
+                                    <p className="text-sm text-muted-foreground">
+                                        Lead não encontrado na base de dados para este telefone.
+                                    </p>
+                                </div>
+                                <button
+                                    className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50"
+                                    onClick={handleResendMessages}
+                                    disabled={isResending || messages.length === 0}
+                                >
+                                    {isResending ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <SendHorizonal className="h-4 w-4" />
+                                    )}
+                                    Reenvio de últimas mensagens
+                                </button>
                             </div>
                         )}
                     </div>
