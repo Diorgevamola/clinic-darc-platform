@@ -33,7 +33,16 @@ export interface UazapiMessage {
 
 export interface UazapiResponse<T> {
     response: T[];
-    count: number;
-    status: number;
+    pagination?: {
+        currentPage: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        pageSize: number;
+        totalPages: number;
+        totalRecords: number;
+    };
+    // Error handling fields (custom added by action)
+    status?: number;
     error?: string;
+    count?: number; // Legacy or alternative endpoints
 }
