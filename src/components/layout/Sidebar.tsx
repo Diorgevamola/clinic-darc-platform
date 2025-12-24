@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, User, ChevronLeft, ChevronRight, LogOut, Users } from "lucide-react";
+import { LayoutDashboard, User, ChevronLeft, ChevronRight, LogOut, Users, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/app/actions";
@@ -19,6 +19,11 @@ const sidebarItems = [
         title: "Leads",
         href: "/leads",
         icon: Users,
+    },
+    {
+        title: "Chats",
+        href: "/chats",
+        icon: MessageSquare,
     },
     {
         title: "Perfil",
