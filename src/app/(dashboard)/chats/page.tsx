@@ -18,6 +18,7 @@ export default function ChatsPage() {
     const [messages, setMessages] = useState<UazapiMessage[]>([]);
     const [loadingChats, setLoadingChats] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const [error, setError] = useState<string | null>(null);
 
@@ -27,7 +28,7 @@ export default function ChatsPage() {
 
     useEffect(() => {
         if (selectedChat) {
-            loadMessages(selectedChat.id);
+            loadMessages(selectedChat.wa_chatid);
         }
     }, [selectedChat]);
 
@@ -62,6 +63,21 @@ export default function ChatsPage() {
         setLoadingMessages(false);
     }
 
+    const filteredChats = chats.filter(chat => {
+        const name = (chat.wa_name || chat.wa_contactName || chat.name || chat.wa_chatid || '').toLowerCase();
+        return name.includes(searchQuery.toLowerCase());
+    });
+
+    const getLastMessageDisplay = (chat: UazapiChat) => {
+        if (chat.wa_lastMessageType === 'image') return '📷 Foto';
+        if (chat.wa_lastMessageType === 'video') return '🎥 Vídeo';
+        if (chat.wa_lastMessageType === 'audio') return '🎙️ Áudio';
+        if (chat.wa_lastMessageType === 'document') return '📄 Documento';
+        if (chat.wa_lastMessageType === 'sticker') return '✨ Figurinha';
+
+        return chat.wa_lastMessageTextVote || chat.wa_lastMessageText || chat.last_message?.message || "Sem mensagens";
+    };
+
     return (
         <div className="flex h-[calc(100vh-80px)] overflow-hidden p-6 gap-6">
             {/* Chat List */}
@@ -70,7 +86,12 @@ export default function ChatsPage() {
                     <h2 className="text-xl font-semibold text-foreground">Conversas</h2>
                     <div className="relative">
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Buscar conversas..." className="pl-8 bg-background/50 border-input" />
+                        <Input
+                            placeholder="Buscar conversas..."
+                            className="pl-8 bg-background/50 border-input"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                     </div>
                 </div>
                 {error && (
@@ -83,30 +104,30 @@ export default function ChatsPage() {
                         <div className="p-4 text-center text-muted-foreground">Carregando...</div>
                     ) : (
                         <div className="flex flex-col gap-1 p-2">
-                            {chats.map(chat => (
+                            {filteredChats.map(chat => (
                                 <button
-                                    key={chat.id}
+                                    key={chat.wa_chatid || chat.id}
                                     onClick={() => setSelectedChat(chat)}
-                                    className={`flex items-start gap-3 p-3 rounded-lg transition-colors text-left ${selectedChat?.id === chat.id
+                                    className={`flex items-start gap-3 p-3 rounded-lg transition-colors text-left ${selectedChat?.wa_chatid === chat.wa_chatid
                                         ? 'bg-primary/20 hover:bg-primary/30'
                                         : 'hover:bg-muted/50'
                                         }`}
                                 >
                                     <Avatar>
-                                        <AvatarImage src={chat.profileParams?.imgUrl} />
-                                        <AvatarFallback>{chat.wa_name?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                        <AvatarImage src={chat.image || chat.profileParams?.imgUrl} />
+                                        <AvatarFallback>{(chat.wa_name || chat.wa_contactName || chat.name || "U")?.slice(0, 2).toUpperCase()}</AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-baseline">
                                             <span className="font-medium truncate text-sm text-foreground">
-                                                {chat.wa_name || chat.id.split('@')[0]}
+                                                {chat.wa_name || chat.wa_contactName || chat.name || chat.wa_chatid.split('@')[0]}
                                             </span>
                                             <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
                                                 {chat.wa_lastMsgTimestamp ? format(new Date(chat.wa_lastMsgTimestamp), 'HH:mm', { locale: ptBR }) : ''}
                                             </span>
                                         </div>
                                         <p className="text-xs text-muted-foreground truncate">
-                                            {chat.last_message?.message || "Sem mensagens"}
+                                            {getLastMessageDisplay(chat)}
                                         </p>
                                     </div>
                                     {chat.wa_unreadCount > 0 && (
@@ -128,12 +149,14 @@ export default function ChatsPage() {
                         <div className="p-4 border-b border-border flex justify-between items-center bg-card/80">
                             <div className="flex items-center gap-3">
                                 <Avatar>
-                                    <AvatarImage src={selectedChat.profileParams?.imgUrl} />
-                                    <AvatarFallback>{selectedChat.wa_name?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                    <AvatarImage src={selectedChat.image || selectedChat.profileParams?.imgUrl} />
+                                    <AvatarFallback>{(selectedChat.wa_name || selectedChat.wa_contactName || selectedChat.name || "U")?.slice(0, 2).toUpperCase()}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <h3 className="font-semibold text-foreground">{selectedChat.wa_name}</h3>
-                                    <p className="text-xs text-muted-foreground">{selectedChat.id.split('@')[0]}</p>
+                                    <h3 className="font-semibold text-foreground">{selectedChat.wa_name || selectedChat.wa_contactName || selectedChat.name}</h3>
+                                    <p className="text-xs text-muted-foreground">
+                                        {selectedChat.phone || `+${selectedChat.wa_chatid.split('@')[0]}`}
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex gap-2 text-muted-foreground">
@@ -150,14 +173,14 @@ export default function ChatsPage() {
                                     messages.map(msg => (
                                         <div
                                             key={msg.id}
-                                            className={`max-w-[70%] p-3 rounded-2xl text-sm ${msg.wa_fromMe
+                                            className={`max-w-[70%] p-3 rounded-2xl text-sm ${msg.fromMe
                                                 ? 'bg-primary/20 text-foreground self-end rounded-br-none'
                                                 : 'bg-muted text-foreground self-start rounded-bl-none'
                                                 }`}
                                         >
-                                            <p>{msg.wa_body}</p>
+                                            <p>{msg.text}</p>
                                             <span className="text-[10px] opacity-70 block text-right mt-1">
-                                                {format(new Date(msg.wa_timestamp), 'HH:mm')}
+                                                {format(new Date(msg.messageTimestamp), 'HH:mm')}
                                             </span>
                                         </div>
                                     ))

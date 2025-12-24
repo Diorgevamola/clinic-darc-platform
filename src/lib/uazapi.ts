@@ -1,14 +1,19 @@
 
 export interface UazapiChat {
-    id: string; // e.g. "5511999999999@s.whatsapp.net"
-    wa_name: string;
-    wa_pushname?: string;
+    id: string; // Internal UUID
+    wa_chatid: string; // e.g. "5511999999999@s.whatsapp.net"
+    wa_name?: string;
+    wa_contactName?: string;
+    name?: string;
+    phone?: string;
     wa_lastMsgTimestamp: number;
     wa_unreadCount: number;
     wa_isGroup: boolean;
-    lead_status?: string;
-    lead_name?: string;
-    last_message?: {
+    wa_lastMessageType?: string;
+    wa_lastMessageTextVote?: string; // Often contains the last message text
+    wa_lastMessageText?: string;
+    image?: string;
+    last_message?: { // Legacy or alternative
         message: string;
         type: string;
         fromMe: boolean;
@@ -20,15 +25,14 @@ export interface UazapiChat {
 
 export interface UazapiMessage {
     id: string;
-    wa_messageId: string;
-    wa_contactId: string;
-    wa_name: string;
-    wa_body: string;
-    wa_type: string;
-    wa_timestamp: number;
-    wa_fromMe: boolean;
-    wa_isForwarded?: boolean;
-    mediaUrl?: string; // Derived or if available
+    messageid: string;
+    chatid: string;
+    text: string;
+    messageType: string;
+    messageTimestamp: number;
+    fromMe: boolean;
+    senderName?: string;
+    fileURL?: string;
 }
 
 export interface UazapiResponse<T> {
