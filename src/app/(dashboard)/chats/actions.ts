@@ -20,9 +20,13 @@ async function getCredentials() {
         .eq('id', session.value)
         .single();
 
-    if (error || !data || !data.token_uazapi || !data.url_uazapi) {
+    if (error || !data) {
         console.error("Credentials error:", error || "Missing data");
-        throw new Error("Credenciais Uazapi não encontradas");
+        throw new Error(`Credenciais Uazapi não encontradas. Error: ${error?.message || 'Data missing'}`);
+    }
+
+    if (!data.token_uazapi || !data.url_uazapi) {
+        throw new Error("Token ou URL da Uazapi não configurados para este usuário.");
     }
 
     return {
@@ -55,9 +59,9 @@ export async function fetchChats(page: number = 1, limit: number = 20): Promise<
         }
 
         return await response.json();
-    } catch (error) {
+    } catch (error: any) {
         console.error("fetchChats error:", error);
-        return { response: [], count: 0, status: 500 };
+        return { response: [], count: 0, status: 500, error: error.message };
     }
 }
 
@@ -85,8 +89,8 @@ export async function fetchMessages(chatId: string, limit: number = 50): Promise
         }
 
         return await response.json();
-    } catch (error) {
+    } catch (error: any) {
         console.error("fetchMessages error:", error);
-        return { response: [], count: 0, status: 500 };
+        return { response: [], count: 0, status: 500, error: error.message };
     }
 }

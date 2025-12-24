@@ -19,6 +19,8 @@ export default function ChatsPage() {
     const [loadingChats, setLoadingChats] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(false);
 
+    const [error, setError] = useState<string | null>(null);
+
     useEffect(() => {
         loadChats();
     }, []);
@@ -31,8 +33,12 @@ export default function ChatsPage() {
 
     async function loadChats() {
         setLoadingChats(true);
+        setError(null);
         const res = await fetchChats();
-        if (res.response) {
+        if (res.error) {
+            console.error("Chats error:", res.error);
+            setError(res.error);
+        } else if (res.response) {
             setChats(res.response);
         }
         setLoadingChats(false);
@@ -59,6 +65,11 @@ export default function ChatsPage() {
                         <Input placeholder="Buscar conversas..." className="pl-8 bg-background/50 border-input" />
                     </div>
                 </div>
+                {error && (
+                    <div className="p-4 m-2 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-md">
+                        {error}
+                    </div>
+                )}
                 <ScrollArea className="flex-1">
                     {loadingChats ? (
                         <div className="p-4 text-center text-muted-foreground">Carregando...</div>
@@ -69,8 +80,8 @@ export default function ChatsPage() {
                                     key={chat.id}
                                     onClick={() => setSelectedChat(chat)}
                                     className={`flex items-start gap-3 p-3 rounded-lg transition-colors text-left ${selectedChat?.id === chat.id
-                                            ? 'bg-primary/20 hover:bg-primary/30'
-                                            : 'hover:bg-muted/50'
+                                        ? 'bg-primary/20 hover:bg-primary/30'
+                                        : 'hover:bg-muted/50'
                                         }`}
                                 >
                                     <Avatar>
@@ -132,8 +143,8 @@ export default function ChatsPage() {
                                         <div
                                             key={msg.id}
                                             className={`max-w-[70%] p-3 rounded-2xl text-sm ${msg.wa_fromMe
-                                                    ? 'bg-primary/20 text-foreground self-end rounded-br-none'
-                                                    : 'bg-muted text-foreground self-start rounded-bl-none'
+                                                ? 'bg-primary/20 text-foreground self-end rounded-br-none'
+                                                : 'bg-muted text-foreground self-start rounded-bl-none'
                                                 }`}
                                         >
                                             <p>{msg.wa_body}</p>

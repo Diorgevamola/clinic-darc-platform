@@ -35,4 +35,5 @@ export interface UazapiResponse<T> {
     response: T[];
     count: number;
     status: number;
+    error?: string;
 }
