@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -5,6 +6,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { FunnelChart } from "@/components/dashboard/FunnelChart";
 import { StepConversionChart } from "@/components/dashboard/StepConversionChart";
+import { LeadsOverTimeChart } from '@/components/dashboard/LeadsOverTimeChart';
 import { fetchDashboardData, getAvailableScripts, TimeRange, DashboardStats } from "@/lib/api";
 import { startOfDay, endOfDay, subDays } from 'date-fns';
 import {
@@ -111,9 +113,19 @@ export default function DashboardPage() {
       ) : data ? (
         <div className="space-y-4">
           <StatsCards stats={data} />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <FunnelChart data={data.funnel} />
-            <StepConversionChart data={data.stepConversion} />
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
+            <div className="col-span-1 md:col-span-2 lg:col-span-4">
+              <LeadsOverTimeChart />
+            </div>
+            <div className="col-span-1 md:col-span-2 lg:col-span-3">
+              <FunnelChart data={data.funnel} />
+            </div>
+          </div>
+
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
+            <div className="col-span-1 md:col-span-2 lg:col-span-7">
+              <StepConversionChart data={data.stepConversion} />
+            </div>
           </div>
         </div>
       ) : (
@@ -122,3 +134,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

@@ -1,12 +1,14 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, User, ChevronLeft, ChevronRight, LogOut, Users, MessageSquare } from "lucide-react";
+import { LayoutDashboard, User, ChevronLeft, ChevronRight, LogOut, Users, MessageSquare, Layout } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/app/actions";
+import { getUserProfile } from "@/app/(dashboard)/perfil/actions";
 import { motion, AnimatePresence } from "motion/react";
 
 const sidebarItems = [
@@ -14,6 +16,11 @@ const sidebarItems = [
         title: "Dashboard",
         href: "/",
         icon: LayoutDashboard,
+    },
+    {
+        title: "Kanban",
+        href: "/kanban",
+        icon: Layout,
     },
     {
         title: "Leads",
@@ -26,6 +33,12 @@ const sidebarItems = [
         icon: MessageSquare,
     },
     {
+        title: "Distribuição",
+        href: "/distribuicao",
+        icon: Users,
+    },
+
+    {
         title: "Perfil",
         href: "/perfil",
         icon: User,
@@ -34,15 +47,30 @@ const sidebarItems = [
 
 export function Sidebar() {
     const [collapsed, setCollapsed] = useState(false);
+    const [officeName, setOfficeName] = useState<string>("AllService AI");
     const pathname = usePathname();
+
+    useEffect(() => {
+        async function loadProfile() {
+            try {
+                const profile = await getUserProfile();
+                if (profile && profile["Escritório"]) {
+                    setOfficeName(profile["Escritório"]);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar nome do escritório:", error);
+            }
+        }
+        loadProfile();
+    }, []);
 
     const toggleSidebar = () => setCollapsed(!collapsed);
 
     return (
         <motion.div
             initial={{ width: 240 }}
-            animate={{ width: collapsed ? 80 : 240 }}
-            className="relative flex h-screen flex-col border-r bg-card text-card-foreground transition-all duration-300"
+            animate={{ width: collapsed ? 100 : 280 }}
+            className="relative flex h-screen flex-col border-r border-white/5 bg-black/60 backdrop-blur-xl text-zinc-100 transition-all duration-300"
         >
             <div className="flex h-16 items-center justify-between px-4">
                 {!collapsed && (
@@ -52,7 +80,7 @@ export function Sidebar() {
                         exit={{ opacity: 0 }}
                         className="text-lg font-bold truncate bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
                     >
-                        AllService AI
+                        {officeName}
                     </motion.span>
                 )}
                 {collapsed && (
@@ -68,7 +96,7 @@ export function Sidebar() {
                 </Button>
             </div>
 
-            <nav className="flex-1 space-y-2 p-2">
+            <nav className="flex-1 space-y-4 px-4 py-6">
                 {sidebarItems.map((item) => {
                     const isActive = pathname === item.href;
                     return (
@@ -76,8 +104,8 @@ export function Sidebar() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                                isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+                                "flex items-center gap-4 rounded-xl px-4 py-3 text-sm font-light tracking-wide transition-all hover:bg-white/5 hover:text-white",
+                                isActive ? "bg-white/5 text-white shadow-[0_0_20px_rgba(255,255,255,0.02)] border border-white/5" : "text-zinc-400",
                                 collapsed && "justify-center px-2"
                             )}
                         >

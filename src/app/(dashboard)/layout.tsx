@@ -10,11 +10,16 @@ export default function DashboardLayout({
 }) {
     const pathname = usePathname();
     const isChatsPage = pathname === '/chats';
+    const isKanbanPage = pathname === '/kanban';
+
+    // Chats needs overflow-hidden to handle its own scrolling
+    // Kanban needs p-0 but allows main overflow (for now, or we can move scrollbars inner)
+    const isNoPadding = isChatsPage || isKanbanPage;
 
     return (
         <div className="flex h-screen overflow-hidden">
             <Sidebar />
-            <main className={`flex-1 ${isChatsPage ? 'p-0 overflow-hidden' : 'p-8 overflow-y-auto'}`}>
+            <main className={`flex-1 ${isNoPadding ? 'p-0' : 'p-8'} ${isChatsPage ? 'overflow-hidden' : 'overflow-y-auto'}`}>
                 {children}
             </main>
         </div>

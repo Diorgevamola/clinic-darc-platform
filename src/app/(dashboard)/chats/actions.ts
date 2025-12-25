@@ -74,8 +74,45 @@ export async function fetchChats(page: number = 1, limit: number = 20): Promise<
 
         const data: UazapiResponse<UazapiChat> = await response.json();
 
-        // Normalize chat last message types
         const chats = data.chats || data.response || [];
+
+        // Enrich with AI status from Supabase
+        try {
+            chats.forEach(chat => { chat.isAIEnabled = false; });
+
+            const cookieStore = await cookies();
+            const session = cookieStore.get('session');
+            if (session?.value && chats.length > 0) {
+                const userId = parseInt(session.value);
+                const supabase = createClient();
+                const phones = chats.map(c => (c.phone || c.wa_chatid.split('@')[0]).replace(/\D/g, ''));
+
+                const { data: leadStatuses } = await supabase
+                    .from('Todos os clientes')
+                    .select('telefone, IA_responde, Status, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12')
+                    .eq('ID_empresa', userId)
+                    .in('telefone', phones);
+
+                if (leadStatuses) {
+                    const statusMap = new Map(leadStatuses.map((l: any) => [l.telefone, l]));
+                    chats.forEach(chat => {
+                        const p = (chat.phone || chat.wa_chatid.split('@')[0]).replace(/\D/g, '');
+                        const leadData = statusMap.get(p);
+                        if (leadData) {
+                            chat.isAIEnabled = leadData.IA_responde === true || leadData.IA_responde === 'true';
+                            chat.isCompleted = leadData.Status === 'Concluído';
+                            chat.status = leadData.Status;
+                            chat.t1 = leadData.t1; chat.t2 = leadData.t2; chat.t3 = leadData.t3; chat.t4 = leadData.t4;
+                            chat.t5 = leadData.t5; chat.t6 = leadData.t6; chat.t7 = leadData.t7; chat.t8 = leadData.t8;
+                            chat.t9 = leadData.t9; chat.t10 = leadData.t10; chat.t11 = leadData.t11; chat.t12 = leadData.t12;
+                        }
+                    });
+                }
+            }
+        } catch (supabaseError) {
+            console.error("Error enriching chats with Supabase status:", supabaseError);
+        }
+
         chats.forEach(chat => {
             if (chat.wa_lastMessageType) {
                 chat.wa_lastMessageType = normalizeMessageType(chat.wa_lastMessageType);
@@ -275,6 +312,22 @@ export async function toggleLeadAI(phone: string, isEnabled: boolean) {
 
 export async function resendLatestMessages(name: string, phone: string, text: string) {
     try {
+        const cookieStore = await cookies();
+        const session = cookieStore.get('session');
+        if (!session?.value) throw new Error("Usuário não autenticado");
+
+        const supabase = createClient();
+        const { data: attendant, error } = await supabase
+            .from('numero_dos_atendentes')
+            .select('id, telefone')
+            .eq('id', session.value)
+            .single();
+
+        if (error || !attendant) {
+            console.error("Attendant info error:", error);
+            throw new Error("Informações do atendente não encontradas");
+        }
+
         const webhookUrl = 'https://n8n-n8n.0js9zt.easypanel.host/webhook/reenvio_mensagem_allservice_adv';
 
         const response = await fetch(webhookUrl, {
@@ -285,7 +338,9 @@ export async function resendLatestMessages(name: string, phone: string, text: st
             body: JSON.stringify({
                 name,
                 phone: phone.replace(/\D/g, ''),
-                text
+                text,
+                atendente_phone: attendant.telefone,
+                atendente_id: attendant.id
             })
         });
 

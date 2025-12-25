@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { fetchChats, fetchMessages, getLeadDetails, sendMessage, deleteMessage, toggleLeadAI, resendLatestMessages } from './actions';
 import { UazapiChat, UazapiMessage } from '@/lib/uazapi';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,6 +18,9 @@ import {
     Trash2,
     Plus,
     Bot,
+    User,
+    CheckCircle2,
+    SlidersHorizontal,
     Loader2,
     SendHorizonal
 } from 'lucide-react';
@@ -35,7 +39,10 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-export default function ChatsPage() {
+function ChatsContent() {
+    const searchParams = useSearchParams();
+    const phoneParam = searchParams.get('phone');
+
     const [chats, setChats] = useState<UazapiChat[]>([]);
     const [selectedChat, setSelectedChat] = useState<UazapiChat | null>(null);
     const [messages, setMessages] = useState<UazapiMessage[]>([]);
@@ -58,6 +65,10 @@ export default function ChatsPage() {
     const [isFabOpen, setIsFabOpen] = useState(false);
     const [isAIEnabled, setIsAIEnabled] = useState(false);
     const [isResending, setIsResending] = useState(false);
+    const [aiFilter, setAiFilter] = useState<'all' | 'ai' | 'human'>('all');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'Em andamento' | 'Concluído' | 'Desqualificado'>('all');
+    const [questionFilter, setQuestionFilter] = useState<string>('all');
+    const [showFilters, setShowFilters] = useState(false);
 
     // Initial load
     useEffect(() => {
@@ -94,6 +105,25 @@ export default function ChatsPage() {
             setIsAIEnabled(false);
         }
     }, [leadDetails]);
+
+    // Auto-select chat from query param
+    useEffect(() => {
+        if (phoneParam && chats.length > 0 && !selectedChat) {
+            const sanitizedPhone = phoneParam.replace(/\D/g, '');
+            const chat = chats.find(c => {
+                const p = (c.phone || c.wa_chatid.split('@')[0]).replace(/\D/g, '');
+                return p === sanitizedPhone;
+            });
+            if (chat) {
+                handleChatSelect(chat);
+                // Clear the param or at least stop trying to select it once selected
+            } else if (!loadingChats && !loadingMore && hasMore && page < 5) {
+                // If not found in first few pages, try to load more automatically
+                // but limit to 5 pages to avoid infinite loops or heavy loads
+                loadChats(page + 1);
+            }
+        }
+    }, [phoneParam, chats, selectedChat, loadingChats, loadingMore, hasMore, page]);
 
     async function loadChats(pageNum: number, isInitial = false) {
         if (isInitial) setLoadingChats(true);
@@ -193,6 +223,14 @@ export default function ChatsPage() {
             const phone = chat.phone || chat.wa_chatid.split('@')[0];
             const details = await getLeadDetails(phone);
             setLeadDetails(details);
+
+            // Update local chat list status if it changed
+            if (details) {
+                const completed = details.Status === 'Concluído';
+                setChats(prev => prev.map(c =>
+                    c.wa_chatid === chat.wa_chatid ? { ...c, isCompleted: completed } : c
+                ));
+            }
         }
 
         await loadMessages(chat.wa_chatid, true);
@@ -261,6 +299,14 @@ export default function ChatsPage() {
             if (leadDetails) {
                 setLeadDetails({ ...leadDetails, IA_responde: enabled });
             }
+            // Update the chat item in the list immediately
+            setChats(prev => prev.map(c => {
+                const currentPhone = (c.phone || c.wa_chatid.split('@')[0]).replace(/\D/g, '');
+                if (currentPhone === phone) {
+                    return { ...c, isAIEnabled: enabled };
+                }
+                return c;
+            }));
         } else {
             setIsAIEnabled(prev);
             toast.error("Erro ao alterar status da IA");
@@ -308,8 +354,39 @@ export default function ChatsPage() {
 
     const filteredChats = chats.filter(chat => {
         const name = (chat.wa_name || chat.wa_contactName || chat.name || chat.wa_chatid || '').toLowerCase();
-        return name.includes(searchQuery.toLowerCase());
+        const matchesSearch = name.includes(searchQuery.toLowerCase());
+
+        let matchesAI = true;
+        if (aiFilter === 'ai') matchesAI = chat.isAIEnabled === true;
+        else if (aiFilter === 'human') matchesAI = chat.isAIEnabled !== true;
+
+        let matchesStatus = true;
+        if (statusFilter !== 'all') {
+            // chat.isCompleted is already based on Status === 'Concluído'
+            // We need to ensure fetchChats returns leadData.Status so we can set it on chat
+            matchesStatus = chat.status === statusFilter;
+        }
+
+        let matchesQuestion = true;
+        if (questionFilter !== 'all') {
+            const key = questionFilter.toLowerCase() as keyof UazapiChat;
+            const val = chat[key];
+            matchesQuestion = val !== null && val !== undefined && val !== '';
+        }
+
+        return matchesSearch && matchesAI && matchesStatus && matchesQuestion;
     });
+
+    // Automatically load more if filtered list is empty but we have more pages
+    useEffect(() => {
+        const isFiltered = aiFilter !== 'all' || statusFilter !== 'all' || questionFilter !== 'all';
+        if (!loadingChats && !loadingMore && hasMore && filteredChats.length === 0 && isFiltered) {
+            const timer = setTimeout(() => {
+                loadChats(page + 1);
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [filteredChats.length, aiFilter, statusFilter, questionFilter, hasMore, loadingChats, loadingMore, page]);
 
     const getLastMessageDisplay = (chat: UazapiChat) => {
         if (chat.wa_lastMessageTextVote) return chat.wa_lastMessageTextVote;
@@ -324,91 +401,158 @@ export default function ChatsPage() {
             {/* Chat List Sider */}
             <div className="w-[350px] border-r border-border bg-card flex flex-col">
                 <div className="p-4 border-b border-border space-y-4">
-                    <h1 className="text-xl font-bold">Conversas</h1>
-                    <div className="relative">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Buscar conversa..."
-                            className="pl-8 bg-background"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+                    <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Buscar conversa..."
+                                className="pl-8 bg-background"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`p-2 rounded-md transition-all border ${showFilters || aiFilter !== 'all' || statusFilter !== 'all' || questionFilter !== 'all' ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-background hover:bg-muted border-transparent text-muted-foreground'}`}
+                            title="Filtros"
+                        >
+                            <SlidersHorizontal className="h-4 w-4" />
+                        </button>
                     </div>
+
+                    {showFilters && (
+                        <div className="space-y-3 pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                            <div className="space-y-1.5">
+                                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">Tipo</span>
+                                <div className="flex gap-1 bg-muted/50 p-1 rounded-md">
+                                    <button
+                                        onClick={() => setAiFilter('all')}
+                                        className={`flex-1 py-1 text-[10px] font-medium rounded transition-all ${aiFilter === 'all' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        Todos
+                                    </button>
+                                    <button
+                                        onClick={() => setAiFilter('ai')}
+                                        className={`flex-1 flex items-center justify-center gap-1 py-1 text-[10px] font-medium rounded transition-all ${aiFilter === 'ai' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        <Bot className="h-3 w-3" />
+                                        IA
+                                    </button>
+                                    <button
+                                        onClick={() => setAiFilter('human')}
+                                        className={`flex-1 flex items-center justify-center gap-1 py-1 text-[10px] font-medium rounded transition-all ${aiFilter === 'human' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        <User className="h-3 w-3" />
+                                        Humano
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">Status</span>
+                                <div className="grid grid-cols-2 gap-1 bg-muted/50 p-1 rounded-md">
+                                    {(['all', 'Em andamento', 'Concluído', 'Desqualificado'] as const).map((s) => (
+                                        <button
+                                            key={s}
+                                            onClick={() => setStatusFilter(s)}
+                                            className={`py-1 text-[10px] font-medium rounded transition-all ${statusFilter === s ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                        >
+                                            {s === 'all' ? 'Todos' : s}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">Etapa Alcançada</span>
+                                <div className="grid grid-cols-4 gap-1 bg-muted/50 p-1 rounded-md max-h-[120px] overflow-y-auto custom-scrollbar">
+                                    <button
+                                        onClick={() => setQuestionFilter('all')}
+                                        className={`py-1 text-[10px] font-medium rounded transition-all ${questionFilter === 'all' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        Todas
+                                    </button>
+                                    {(['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'] as const).map((t) => (
+                                        <button
+                                            key={t}
+                                            onClick={() => setQuestionFilter(t)}
+                                            className={`py-1 text-[10px] font-medium rounded transition-all ${questionFilter === t ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                        >
+                                            {t}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <ScrollArea className="flex-1 min-h-0">
                     <div className="flex flex-col">
                         {loadingChats ? (
                             <div className="p-4 text-center text-muted-foreground">Carregando...</div>
-                        ) : filteredChats.length === 0 ? (
-                            <div className="p-4 text-center text-muted-foreground">Nenhuma conversa encontrada.</div>
                         ) : (
                             <>
-                                {filteredChats.map((chat, index) => {
-                                    if (filteredChats.length === index + 1) {
-                                        return (
-                                            <div
-                                                ref={lastChatElementRef}
-                                                key={chat.id || chat.wa_chatid}
-                                                className={`p-4 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors flex gap-3 ${selectedChat?.wa_chatid === chat.wa_chatid ? 'bg-muted' : ''}`}
-                                                onClick={() => handleChatSelect(chat)}
-                                            >
-                                                <Avatar>
-                                                    <AvatarImage src={chat.image || chat.profileParams?.imgUrl} />
-                                                    <AvatarFallback>{(chat.wa_name || chat.wa_contactName || chat.name || "U")?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex justify-between items-baseline mb-1">
-                                                        <h3 className="font-semibold truncate text-sm">{chat.wa_name || chat.wa_contactName || chat.name || chat.wa_chatid}</h3>
-                                                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                                                            {chat.wa_lastMsgTimestamp ? format(new Date(chat.wa_lastMsgTimestamp * 1000), 'dd/MM HH:mm') : ''}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-sm text-muted-foreground truncate">
-                                                        {getLastMessageDisplay(chat)}
-                                                    </p>
+                                {filteredChats.map((chat) => (
+                                    <div
+                                        key={chat.id || chat.wa_chatid}
+                                        className={`p-4 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors flex gap-3 ${selectedChat?.wa_chatid === chat.wa_chatid ? 'bg-muted' : ''}`}
+                                        onClick={() => handleChatSelect(chat)}
+                                    >
+                                        <Avatar>
+                                            <AvatarImage src={chat.image || chat.profileParams?.imgUrl} />
+                                            <AvatarFallback>{(chat.wa_name || chat.wa_contactName || chat.name || "U")?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-baseline mb-1">
+                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                    {chat.isCompleted && (
+                                                        <div title="Atendimento Concluído">
+                                                            <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                                                        </div>
+                                                    )}
+                                                    {chat.isAIEnabled ? (
+                                                        <div title="Atendimento por IA">
+                                                            <Bot className="h-3.5 w-3.5 text-primary shrink-0" />
+                                                        </div>
+                                                    ) : (
+                                                        <div title="Atendimento Humano">
+                                                            <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                                        </div>
+                                                    )}
+                                                    <h3 className="font-semibold truncate text-sm">{chat.wa_name || chat.wa_contactName || chat.name || chat.wa_chatid}</h3>
                                                 </div>
+                                                <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                                                    {chat.wa_lastMsgTimestamp ? format(new Date(chat.wa_lastMsgTimestamp * 1000), 'dd/MM HH:mm') : ''}
+                                                </span>
                                             </div>
-                                        );
-                                    } else {
-                                        return (
-                                            <div
-                                                key={chat.id || chat.wa_chatid}
-                                                className={`p-4 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors flex gap-3 ${selectedChat?.wa_chatid === chat.wa_chatid ? 'bg-muted' : ''}`}
-                                                onClick={() => handleChatSelect(chat)}
-                                            >
-                                                <Avatar>
-                                                    <AvatarImage src={chat.image || chat.profileParams?.imgUrl} />
-                                                    <AvatarFallback>{(chat.wa_name || chat.wa_contactName || chat.name || "U")?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex justify-between items-baseline mb-1">
-                                                        <h3 className="font-semibold truncate text-sm">{chat.wa_name || chat.wa_contactName || chat.name || chat.wa_chatid}</h3>
-                                                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                                                            {chat.wa_lastMsgTimestamp ? format(new Date(chat.wa_lastMsgTimestamp * 1000), 'dd/MM HH:mm') : ''}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-sm text-muted-foreground truncate">
-                                                        {getLastMessageDisplay(chat)}
-                                                    </p>
-                                                </div>
-                                                {chat.wa_unreadCount > 0 && (
-                                                    <div className="flex flex-col justify-center">
-                                                        <span className="h-5 w-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-[10px] font-bold">
-                                                            {chat.wa_unreadCount}
-                                                        </span>
-                                                    </div>
-                                                )}
+                                            <p className="text-sm text-muted-foreground truncate">
+                                                {getLastMessageDisplay(chat)}
+                                            </p>
+                                        </div>
+                                        {chat.wa_unreadCount > 0 && (
+                                            <div className="flex flex-col justify-center">
+                                                <span className="h-5 w-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-[10px] font-bold">
+                                                    {chat.wa_unreadCount}
+                                                </span>
                                             </div>
-                                        );
-                                    }
-                                })}
-                                {loadingMore && (
-                                    <div className="p-4 flex justify-center items-center text-muted-foreground gap-2">
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        <span className="text-xs">Carregando mais...</span>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {filteredChats.length === 0 && !loadingMore && !loadingChats && (
+                                    <div className="p-8 text-center text-muted-foreground text-sm">
+                                        Nenhuma conversa encontrada.
                                     </div>
                                 )}
+
+                                {hasMore && (
+                                    <div ref={lastChatElementRef} className="p-4 flex justify-center items-center gap-2">
+                                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                        {loadingMore && <span className="text-xs text-muted-foreground">Carregando mais...</span>}
+                                    </div>
+                                )}
+
                                 {!hasMore && filteredChats.length > 0 && (
                                     <div className="p-4 text-center text-[10px] text-muted-foreground opacity-50 uppercase tracking-wider">
                                         Fim das conversas
@@ -544,6 +688,22 @@ export default function ChatsPage() {
 
                             {/* FAB Area - Bottom Left of the Chat Area */}
                             <div className="absolute bottom-20 left-4 z-20 flex flex-col gap-2">
+                                {/* Resend Messages Button (only if lead not found) */}
+                                {leadDetails === null && (
+                                    <button
+                                        className="h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center transition-all hover:bg-primary/90 disabled:opacity-50"
+                                        onClick={handleResendMessages}
+                                        disabled={isResending || messages.length === 0}
+                                        title="Reenvio de últimas mensagens"
+                                    >
+                                        {isResending ? (
+                                            <Loader2 className="h-5 w-5 animate-spin" />
+                                        ) : (
+                                            <SendHorizonal className="h-5 w-5" />
+                                        )}
+                                    </button>
+                                )}
+
                                 <div className={`flex items-center gap-2 bg-card border border-border p-2 rounded-lg shadow-lg transition-all duration-300 origin-bottom-left ${isFabOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}>
                                     <Switch
                                         id="ai-mode"
@@ -672,23 +832,26 @@ export default function ChatsPage() {
                                         Lead não encontrado na base de dados para este telefone.
                                     </p>
                                 </div>
-                                <button
-                                    className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50"
-                                    onClick={handleResendMessages}
-                                    disabled={isResending || messages.length === 0}
-                                >
-                                    {isResending ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <SendHorizonal className="h-4 w-4" />
-                                    )}
-                                    Reenvio de últimas mensagens
-                                </button>
                             </div>
                         )}
                     </div>
                 )}
             </Card>
         </div>
+    );
+}
+
+export default function ChatsPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex h-full items-center justify-center bg-black">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-zinc-500 font-light">Carregando conversas...</p>
+                </div>
+            </div>
+        }>
+            <ChatsContent />
+        </Suspense>
     );
 }
