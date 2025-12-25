@@ -575,15 +575,19 @@ function ChatsContent() {
                                             </p>
                                         </div>
 
+                                        {/* Status Indicator - Absolute Positioned */}
                                         {chat.status && (
                                             <div
-                                                className={`absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full border border-white/20 shadow-md z-50 ${chat.status.toLowerCase().includes('concluído') || chat.status.toLowerCase().includes('concluido') ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]' :
-                                                        chat.status.toLowerCase().includes('desqualificado') ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]' :
-                                                            'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.8)]'
+                                                className={`absolute top-3 right-3 h-3 w-3 rounded-full border border-background shadow-sm z-50 ${chat.status.toLowerCase() === 'concluído' || chat.status.toLowerCase() === 'concluido' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
+                                                        chat.status.toLowerCase() === 'desqualificado' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]' :
+                                                            chat.status.toLowerCase() === 'em andamento' ? 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.6)]' :
+                                                                'bg-gray-400'
                                                     }`}
-                                                title={`Status: ${chat.status}`}
+                                                title={chat.status}
                                             />
                                         )}
+                                        {/* TEMPORARY DEBUG: Show status text */}
+                                        {/* <div className="absolute top-0 right-0 text-[8px] text-pink-500 bg-white z-50">{chat.status}</div> */}
 
                                         {chat.wa_unreadCount > 0 && (
                                             <div className="flex flex-col justify-center">
