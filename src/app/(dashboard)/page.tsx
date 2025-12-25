@@ -16,11 +16,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function DashboardPage() {
-  const [range, setRange] = useState<TimeRange>('today');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: undefined,
+    to: undefined,
+  });
   const [selectedArea, setSelectedArea] = useState<string>('all');
   const [scripts, setScripts] = useState<string[]>([]);
   const [data, setData] = useState<DashboardStats | null>(null);
@@ -44,23 +49,34 @@ export default function DashboardPage() {
       try {
         let start: string | undefined;
         let end: string | undefined;
-        const now = new Date();
 
-        switch (range) {
-          case 'today':
-            start = startOfDay(now).toISOString();
-            break;
-          case 'yesterday':
-            start = startOfDay(subDays(now, 1)).toISOString();
-            end = endOfDay(subDays(now, 1)).toISOString();
-            break;
-          case '7days':
-            start = startOfDay(subDays(now, 7)).toISOString();
-            break;
-          case '30days':
-            start = startOfDay(subDays(now, 30)).toISOString();
-            break;
+        // Logic similar to Leads page
+        if (dateRange?.from) {
+          start = startOfDay(dateRange.from).toISOString();
         }
+        if (dateRange?.to) {
+          end = endOfDay(dateRange.to).toISOString();
+        }
+        // If start is set but no end, assume single day range (end of that same day)
+        if (start && !end) {
+          end = endOfDay(dateRange!.from!).toISOString();
+        }
+
+        // If no range selected at all, maybe default to "today" or "last 30 days"?
+        // The previous default was 'today'. 
+        // Let's default to today if nothing selected for consistency with initial state empty?
+        // Or if undefined, fetchDashboardData handles fallback (e.g., all time or custom).
+        // Let's assume start/end undefined means "All time" potentially, or fetchDashboardData has defaults.
+        // Looking at fetchDashboardData: if params are missing, it queries without date filter (all time).
+        // BUT getLeadsOverTimeData defaults to 30 days.
+        // Let's explicitly set a default "Today" if dateRange is purely empty on first load?
+        // Actually, useState initialized with empty. Let's strictly follow the DatePicker selection. 
+        // If undefined, we pass undefined.
+
+        // HOWEVER, for the Charts component, we usually want a default view. 
+        // Let's set the initial state to 'Today' to match previous behavior?
+        // const [range, setRange] = useState<TimeRange>('today');
+        // Let's initialized dateRange with Today.
 
         const stats = await fetchDashboardData(start, end, selectedArea);
         setData(stats);
@@ -72,7 +88,39 @@ export default function DashboardPage() {
     }
 
     loadData();
-  }, [range, selectedArea]);
+  }, [dateRange, selectedArea]);
+
+  // Set default date range to Today on mount if needed, or keep empty to show "Selecione uma data"
+  useEffect(() => {
+    // Set default to today
+    setDateRange({
+      from: new Date(),
+      to: new Date()
+    });
+  }, []);
+
+  // Deriving ISO strings for the Chart component
+  // We need to pass valid strings. If undefined, the chart action handles defaults (30 days).
+  // But we likely want the chart to match the dashboard stats date range.
+  // So we pass the same calculated start/end.
+
+  const getChartDates = () => {
+    let start: string | undefined;
+    let end: string | undefined;
+
+    if (dateRange?.from) {
+      start = startOfDay(dateRange.from).toISOString();
+    }
+    if (dateRange?.to) {
+      end = endOfDay(dateRange.to).toISOString();
+    }
+    if (start && !end) {
+      end = endOfDay(dateRange!.from!).toISOString();
+    }
+    return { start, end };
+  };
+
+  const { start: chartStart, end: chartEnd } = getChartDates();
 
   return (
     <div className="flex-1 space-y-4">
@@ -95,14 +143,7 @@ export default function DashboardPage() {
             </Select>
           </div>
 
-          <Tabs value={range} onValueChange={(v) => setRange(v as TimeRange)}>
-            <TabsList className="bg-muted/50">
-              <TabsTrigger value="today">Hoje</TabsTrigger>
-              <TabsTrigger value="yesterday">Ontem</TabsTrigger>
-              <TabsTrigger value="7days">7 Dias</TabsTrigger>
-              <TabsTrigger value="30days">30 Dias</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <DatePickerWithRange date={dateRange} setDate={setDateRange} />
         </div>
       </DashboardHeader>
 
@@ -115,7 +156,7 @@ export default function DashboardPage() {
           <StatsCards stats={data} />
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
             <div className="col-span-1 md:col-span-2 lg:col-span-4">
-              <LeadsOverTimeChart />
+              <LeadsOverTimeChart startDate={chartStart} endDate={chartEnd} />
             </div>
             <div className="col-span-1 md:col-span-2 lg:col-span-3">
               <FunnelChart data={data.funnel} />

@@ -11,7 +11,7 @@ interface ChartData {
     desqualificado: number // We'll map this to 'desq' for shorter code if needed, but full name is fine
 }
 
-export function LeadsOverTimeChart() {
+export function LeadsOverTimeChart({ startDate, endDate }: { startDate?: string, endDate?: string }) {
     const [data, setData] = useState<ChartData[]>([])
     const [hoveredPoint, setHoveredPoint] = useState<ChartData | null>(null)
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
@@ -41,11 +41,11 @@ export function LeadsOverTimeChart() {
 
     useEffect(() => {
         async function loadData() {
-            const res = await getLeadsOverTimeData();
+            const res = await getLeadsOverTimeData(startDate, endDate);
             setData(res);
         }
         loadData();
-    }, [])
+    }, [startDate, endDate])
 
     const getX = (index: number) => {
         if (data.length < 2) return padding.left
@@ -139,7 +139,7 @@ export function LeadsOverTimeChart() {
                         <h2 className="text-2xl font-bold text-white mb-1">
                             Evolução de Leads
                         </h2>
-                        <p className="text-sm text-zinc-400">Desempenho nos últimos 30 dias</p>
+                        <p className="text-sm text-zinc-400">Desempenho no período selecionado</p>
                     </div>
 
                     <div className="flex gap-4 flex-wrap">
