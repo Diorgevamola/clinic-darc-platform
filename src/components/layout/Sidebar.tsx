@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, User, ChevronLeft, ChevronRight, LogOut, Users, MessageSquare, Layout } from "lucide-react";
+import { LayoutDashboard, User, ChevronLeft, ChevronRight, LogOut, Users, MessageSquare, Layout, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/app/actions";
@@ -45,7 +44,12 @@ const sidebarItems = [
     },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+    isMobileOpen?: boolean;
+    onMobileClose?: () => void;
+}
+
+export function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
     const [collapsed, setCollapsed] = useState(false);
     const [officeName, setOfficeName] = useState<string>("AllService AI");
     const pathname = usePathname();
@@ -65,6 +69,13 @@ export function Sidebar() {
     }, []);
 
     const toggleSidebar = () => setCollapsed(!collapsed);
+
+    const handleNavClick = () => {
+        // Close mobile sidebar on navigation
+        if (onMobileClose) {
+            onMobileClose();
+        }
+    };
 
     return (
         <motion.div
@@ -86,10 +97,20 @@ export function Sidebar() {
                 {collapsed && (
                     <div className="mx-auto h-8 w-8 rounded-full bg-gradient-to-r from-primary to-secondary" />
                 )}
+                {/* Close button for mobile */}
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute -right-4 top-6 h-8 w-8 rounded-full border bg-background shadow-md"
+                    className="md:hidden h-8 w-8 text-zinc-400"
+                    onClick={onMobileClose}
+                >
+                    <X className="h-5 w-5" />
+                </Button>
+                {/* Collapse button for desktop */}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="hidden md:flex absolute -right-4 top-6 h-8 w-8 rounded-full border bg-background shadow-md"
                     onClick={toggleSidebar}
                 >
                     {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -103,6 +124,7 @@ export function Sidebar() {
                         <Link
                             key={item.href}
                             href={item.href}
+                            onClick={handleNavClick}
                             className={cn(
                                 "flex items-center gap-4 rounded-xl px-4 py-3 text-sm font-light tracking-wide transition-all hover:bg-white/5 hover:text-white",
                                 isActive ? "bg-white/5 text-white shadow-[0_0_20px_rgba(255,255,255,0.02)] border border-white/5" : "text-zinc-400",
@@ -137,5 +159,25 @@ export function Sidebar() {
                 </form>
             </div>
         </motion.div>
+    );
+}
+
+// Mobile Header Component
+export function MobileHeader({ onMenuClick, officeName }: { onMenuClick: () => void; officeName: string }) {
+    return (
+        <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-black/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4">
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={onMenuClick}
+                className="text-zinc-400 hover:text-white"
+            >
+                <Menu className="h-6 w-6" />
+            </Button>
+            <span className="text-sm font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                {officeName}
+            </span>
+            <div className="w-10" /> {/* Spacer for centering */}
+        </div>
     );
 }

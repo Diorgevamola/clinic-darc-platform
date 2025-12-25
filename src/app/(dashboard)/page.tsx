@@ -75,13 +75,13 @@ export default function DashboardPage() {
   }, [range, selectedArea]);
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
+    <div className="flex-1 space-y-4">
       <DashboardHeader>
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center gap-3 md:gap-6">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Script:</span>
+            <span className="text-xs md:text-sm font-medium text-muted-foreground whitespace-nowrap">Script:</span>
             <Select value={selectedArea} onValueChange={setSelectedArea}>
-              <SelectTrigger className="w-[180px] bg-card/50 backdrop-blur-sm border-border">
+              <SelectTrigger className="w-[140px] md:w-[180px] bg-card/50 backdrop-blur-sm border-border text-sm">
                 <SelectValue placeholder="Todos os Scripts" />
               </SelectTrigger>
               <SelectContent>

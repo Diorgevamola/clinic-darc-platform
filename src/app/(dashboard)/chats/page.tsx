@@ -22,7 +22,8 @@ import {
     CheckCircle2,
     SlidersHorizontal,
     Loader2,
-    SendHorizonal
+    SendHorizonal,
+    ArrowLeft
 } from 'lucide-react';
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
@@ -398,8 +399,8 @@ function ChatsContent() {
 
     return (
         <div className="flex h-full overflow-hidden">
-            {/* Chat List Sider */}
-            <div className="w-[350px] border-r border-border bg-card flex flex-col">
+            {/* Chat List Sider - Full width on mobile, hidden when chat selected */}
+            <div className={`w-full md:w-[350px] border-r border-border bg-card flex flex-col ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
                 <div className="p-4 border-b border-border space-y-4">
                     <div className="flex items-center gap-2">
                         <div className="relative flex-1">
@@ -564,14 +565,21 @@ function ChatsContent() {
                 </ScrollArea>
             </div>
 
-            {/* Message Area */}
-            <Card className="flex-1 flex flex-row bg-card/50 backdrop-blur-sm border-none rounded-none overflow-hidden relative">
+            {/* Message Area - Full width on mobile, hidden when no chat selected */}
+            <Card className={`flex-1 flex flex-row bg-card/50 backdrop-blur-sm border-none rounded-none overflow-hidden relative ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
                 <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 relative ${showProfile ? 'mr-[0px]' : ''}`}>
                     {selectedChat ? (
                         <>
                             {/* Header */}
                             <div className="p-4 border-b border-border flex justify-between items-center bg-card/80">
                                 <div className="flex items-center gap-3">
+                                    {/* Back button for mobile */}
+                                    <button
+                                        className="md:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground"
+                                        onClick={() => setSelectedChat(null)}
+                                    >
+                                        <ArrowLeft className="h-5 w-5" />
+                                    </button>
                                     <div
                                         className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
                                         onClick={() => setShowProfile(!showProfile)}
