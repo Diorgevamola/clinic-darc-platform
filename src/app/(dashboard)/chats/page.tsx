@@ -586,11 +586,6 @@ function ChatsContent() {
                                                 title={chat.status}
                                             />
                                         )}
-                                        {/* TEMPORARY DEBUG: Show status text */}
-                                        <div className="absolute bottom-2 right-2 text-[10px] text-pink-600 bg-white/90 px-1 rounded z-50 font-bold border border-pink-200">
-                                            {chat.status ? `Status: ${chat.status}` : 'No Status'} | {chat.phone}
-                                        </div>
-
                                         {chat.wa_unreadCount > 0 && (
                                             <div className="flex flex-col justify-center">
                                                 <span className="h-5 w-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-[10px] font-medium">
