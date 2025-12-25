@@ -59,3 +59,10 @@ export interface UazapiResponse<T> {
     error?: string;
     count?: number; // Legacy or alternative endpoints
 }
+
+export interface UazapiInstanceStatus {
+    instance: {
+        instanceName: string;
+        state: string; // "open" | "connecting" | "close"
+    }
+}

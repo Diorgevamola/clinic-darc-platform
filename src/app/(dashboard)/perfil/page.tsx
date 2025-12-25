@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { getUserProfile, updateUserProfile } from "./actions";
+import { getUserProfile, updateUserProfile, getInstanceStatus } from "./actions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface ProfileData {
     "Escritório": string;
@@ -24,20 +25,36 @@ export default function ProfilePage() {
     const [profile, setProfile] = useState<ProfileData | null>(null);
     const [loading, setLoading] = useState(true);
     const [isPending, startTransition] = useTransition();
+    const [instanceStatus, setInstanceStatus] = useState<{ state: string, error?: string } | null>(null);
+    const [loadingStatus, setLoadingStatus] = useState(false);
+
+    const loadProfile = async () => {
+        try {
+            const data = await getUserProfile();
+            setProfile(data);
+        } catch (error) {
+            toast.error("Erro ao carregar perfil");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const checkStatus = async () => {
+        setLoadingStatus(true);
+        try {
+            const status = await getInstanceStatus();
+            setInstanceStatus(status);
+        } catch (error) {
+            console.error("Status check failed", error);
+            setInstanceStatus({ state: 'error', error: 'Falha ao verificar' });
+        } finally {
+            setLoadingStatus(false);
+        }
+    };
 
     useEffect(() => {
-        async function loadProfile() {
-            try {
-                const data = await getUserProfile();
-                setProfile(data);
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            } catch (error) {
-                toast.error("Erro ao carregar perfil");
-            } finally {
-                setLoading(false);
-            }
-        }
         loadProfile();
+        checkStatus();
     }, []);
 
     const handleSubmit = async (formData: FormData) => {
@@ -48,10 +65,41 @@ export default function ProfilePage() {
             } else {
                 toast.success("Perfil atualizado com sucesso!");
                 // Reload profile to get fresh data confirms update
-                const data = await getUserProfile();
-                setProfile(data);
+                loadProfile();
             }
         });
+    };
+
+    const getStatusBadge = () => {
+        if (loadingStatus) return <Badge variant="outline" className="animate-pulse">Verificando...</Badge>;
+        if (!instanceStatus) return <Badge variant="outline">Desconhecido</Badge>;
+
+        const state = instanceStatus.state.toLowerCase();
+
+        if (state === 'open' || state === 'connected') {
+            return (
+                <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/50 gap-1">
+                    <Wifi className="h-3 w-3" />
+                    Conectado - {state}
+                </Badge>
+            );
+        }
+
+        if (state === 'connecting') {
+            return (
+                <Badge className="bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 border-yellow-500/50 gap-1">
+                    <RefreshCw className="h-3 w-3 animate-spin" />
+                    Conectando...
+                </Badge>
+            );
+        }
+
+        return (
+            <Badge className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/50 gap-1">
+                <WifiOff className="h-3 w-3" />
+                Desconectado ({state})
+            </Badge>
+        );
     };
 
     if (loading) {
@@ -68,9 +116,27 @@ export default function ProfilePage() {
 
     return (
         <div className="max-w-2xl mx-auto space-y-6">
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Meu Perfil
-            </h1>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                    Meu Perfil
+                </h1>
+
+                {/* Status Indicator */}
+                <div className="flex items-center gap-2 bg-card/50 backdrop-blur-sm p-3 rounded-xl border border-border/50 shadow-sm">
+                    <span className="text-xs font-medium text-muted-foreground mr-2">Status Uazapi:</span>
+                    {getStatusBadge()}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 ml-1 text-muted-foreground hover:text-white"
+                        onClick={checkStatus}
+                        title="Atualizar Status"
+                        disabled={loadingStatus}
+                    >
+                        <RefreshCw className={`h-3 w-3 ${loadingStatus ? 'animate-spin' : ''}`} />
+                    </Button>
+                </div>
+            </div>
 
             <Card className="border-border bg-card/50 backdrop-blur-sm">
                 <CardHeader>
@@ -79,15 +145,18 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                     <form action={handleSubmit} className="space-y-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="telefone">Telefone (Login)</Label>
-                            <Input
-                                id="telefone"
-                                value={profile.telefone || ''}
-                                disabled
-                                className="bg-muted text-muted-foreground cursor-not-allowed"
-                            />
-                            <p className="text-xs text-muted-foreground">O telefone é usado para login e não pode ser alterado.</p>
+                        <div className="flex gap-4 items-start">
+                            <div className="grid gap-2 flex-1">
+                                <Label htmlFor="telefone">Telefone (Login)</Label>
+                                <Input
+                                    id="telefone"
+                                    name="telefone"
+                                    defaultValue={profile.telefone || ''}
+                                    placeholder="55..."
+                                    className="bg-background/50"
+                                />
+                                <p className="text-xs text-muted-foreground">Este telefone é usado para login e sincronização.</p>
+                            </div>
                         </div>
 
                         <div className="grid gap-2">

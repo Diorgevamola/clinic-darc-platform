@@ -209,9 +209,8 @@ export async function getLeadDetails(phone: string) {
 export async function sendMessage(chatId: string, text: string) {
     try {
         const { token, url } = await getCredentials();
-        // Endpoint for sending text messages
-        // Common Uazapi/Evolution pattern: /message/sendText
-        const endpoint = `${url}/message/sendText`;
+        // Correct Uazapi endpoint for sending text messages
+        const endpoint = `${url}/send/text`;
 
         // Extract number from chatId (remove @s.whatsapp.net if present)
         const number = chatId.includes('@') ? chatId.split('@')[0] : chatId;
@@ -220,13 +219,13 @@ export async function sendMessage(chatId: string, text: string) {
             method: 'POST',
             headers: {
                 'token': token,
+                'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 number: number,
                 text: text,
-                delay: 1200,
-                linkPreview: true
+                delay: 1200
             }),
             next: { revalidate: 0 }
         });
