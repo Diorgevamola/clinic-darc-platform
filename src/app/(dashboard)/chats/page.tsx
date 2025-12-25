@@ -566,9 +566,21 @@ function ChatsContent() {
                                                     )}
                                                     <h3 className="font-semibold truncate text-sm">{chat.wa_name || chat.wa_contactName || chat.name || chat.wa_chatid}</h3>
                                                 </div>
-                                                <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                                                    {chat.wa_lastMsgTimestamp ? format(new Date(chat.wa_lastMsgTimestamp * 1000), 'dd/MM HH:mm') : ''}
-                                                </span>
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                                                        {chat.wa_lastMsgTimestamp ? format(new Date(chat.wa_lastMsgTimestamp * 1000), 'dd/MM HH:mm') : ''}
+                                                    </span>
+                                                    {/* Status Indicator */}
+                                                    {(chat.status === 'Em andamento' || chat.status === 'Concluído' || chat.status === 'Desqualificado') && (
+                                                        <div
+                                                            className={`h-2.5 w-2.5 rounded-full ${chat.status === 'Concluído' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' :
+                                                                    chat.status === 'Desqualificado' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' :
+                                                                        'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]'
+                                                                }`}
+                                                            title={chat.status}
+                                                        />
+                                                    )}
+                                                </div>
                                             </div>
                                             <p className="text-sm text-muted-foreground truncate">
                                                 {getLastMessageDisplay(chat)}
