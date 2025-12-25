@@ -97,13 +97,9 @@ export function LeadsOverTimeChart({ startDate, endDate }: { startDate?: string,
 
     return (
         <div
+            className="w-full bg-card rounded-2xl p-8 border border-border"
             style={{
-                width: "100%",
-                backgroundColor: "#09090b", // zinc-950
-                borderRadius: "16px",
-                padding: "32px",
                 fontFamily: "system-ui, -apple-system, sans-mono",
-                border: "1px solid #27272a", // zinc-800
             }}
         >
             <style jsx>{`
@@ -123,7 +119,6 @@ export function LeadsOverTimeChart({ startDate, endDate }: { startDate?: string,
           animation: pulse 2s ease-in-out infinite;
         }
       `}</style>
-
             <div style={{ maxWidth: "100%", margin: "0 auto" }}>
                 <div
                     style={{
@@ -136,45 +131,35 @@ export function LeadsOverTimeChart({ startDate, endDate }: { startDate?: string,
                     }}
                 >
                     <div>
-                        <h2 className="text-2xl font-light text-white mb-1">
+                        <h2 className="text-2xl font-light text-foreground mb-1">
                             Evolução de Leads
                         </h2>
-                        <p className="text-sm text-zinc-400">Desempenho no período selecionado</p>
+                        <p className="text-sm text-muted-foreground">Desempenho no período selecionado</p>
                     </div>
 
                     <div className="flex gap-4 flex-wrap">
 
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                            <span className="text-sm text-zinc-400">Concluído</span>
+                            <span className="text-sm text-muted-foreground">Concluído</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                            <span className="text-sm text-zinc-400">Em andamento</span>
+                            <span className="text-sm text-muted-foreground">Em andamento</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                            <span className="text-sm text-zinc-400">Desqualificado</span>
+                            <span className="text-sm text-muted-foreground">Desqualificado</span>
                         </div>
                     </div>
                 </div>
 
                 <div
                     ref={containerRef}
-                    style={{
-                        backgroundColor: "#18181b", // zinc-900
-                        borderRadius: "16px",
-                        padding: "24px",
-                        position: "relative",
-                        border: "1px solid #27272a",
-                        height: "350px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center"
-                    }}
+                    className="bg-card/50 rounded-2xl p-6 relative flex items-center justify-center border border-border"
                 >
                     {data.length === 0 ? (
-                        <div className="text-zinc-500">Carregando dados...</div>
+                        <div className="text-muted-foreground">Carregando dados...</div>
                     ) : (
                         <svg
                             ref={svgRef}
@@ -196,13 +181,13 @@ export function LeadsOverTimeChart({ startDate, endDate }: { startDate?: string,
                                             y1={getY(yVal)}
                                             x2={width - padding.right}
                                             y2={getY(yVal)}
-                                            stroke="#27272a"
+                                            stroke="var(--border)"
                                             strokeDasharray="4 4"
                                         />
                                         <text
                                             x={padding.left - 10}
                                             y={getY(yVal)}
-                                            fill="#71717a" // zinc-500
+                                            fill="var(--muted-foreground)" // zinc-500
                                             fontSize="12"
                                             textAnchor="end"
                                             dominantBaseline="middle"
@@ -222,7 +207,7 @@ export function LeadsOverTimeChart({ startDate, endDate }: { startDate?: string,
                                         key={index}
                                         x={getX(index)}
                                         y={height - padding.bottom + 20}
-                                        fill="#71717a"
+                                        fill="var(--muted-foreground)"
                                         fontSize="10"
                                         textAnchor="middle"
                                     >
@@ -298,31 +283,28 @@ export function LeadsOverTimeChart({ startDate, endDate }: { startDate?: string,
                                 left: `${(data.indexOf(hoveredPoint) / (data.length - 1)) * 100}%`,
                                 top: "10px",
                                 transform: "translateX(-50%)",
-                                backgroundColor: "#09090b",
-                                border: "1px solid #27272a",
-                                borderRadius: "8px",
-                                padding: "12px",
                                 pointerEvents: "none",
                                 zIndex: 10,
                                 boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                                 minWidth: "180px"
                             }}
+                            className="bg-popover border border-border rounded-lg p-3"
                         >
-                            <div className="text-zinc-200 font-medium text-sm mb-2 text-center">
+                            <div className="text-foreground font-medium text-sm mb-2 text-center">
                                 {formatDate(hoveredPoint.date)}
                             </div>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                                 <span className="text-indigo-400">Total:</span>
-                                <span className="text-right text-white font-mono">{hoveredPoint.total}</span>
+                                <span className="text-right text-foreground font-mono">{hoveredPoint.total}</span>
 
                                 <span className="text-green-400">Concluído:</span>
-                                <span className="text-right text-white font-mono">{hoveredPoint.concluido}</span>
+                                <span className="text-right text-foreground font-mono">{hoveredPoint.concluido}</span>
 
                                 <span className="text-yellow-400">Em andamento:</span>
-                                <span className="text-right text-white font-mono">{hoveredPoint.em_andamento}</span>
+                                <span className="text-right text-foreground font-mono">{hoveredPoint.em_andamento}</span>
 
                                 <span className="text-red-400">Desqualif.:</span>
-                                <span className="text-right text-white font-mono">{hoveredPoint.desqualificado}</span>
+                                <span className="text-right text-foreground font-mono">{hoveredPoint.desqualificado}</span>
                             </div>
                         </div>
                     )}

@@ -12,7 +12,7 @@ export default function DashboardLayout({
 }) {
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [officeName, setOfficeName] = useState("AllService AI");
+    const [officeName, setOfficeName] = useState("Clinic Darc AI");
 
     const isChatsPage = pathname === '/chats';
     const isKanbanPage = pathname === '/kanban';

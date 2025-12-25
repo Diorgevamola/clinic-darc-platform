@@ -31,15 +31,8 @@ export default function LoginPage() {
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
             <Card className="w-full max-w-md border-primary/20 bg-card/50 backdrop-blur-sm">
                 <CardHeader className="flex flex-col items-center space-y-2">
-                    <div className="relative h-24 w-24 overflow-hidden rounded-full ring-2 ring-primary ring-offset-2 ring-offset-background">
-                        <img
-                            src="/logo.png"
-                            alt="AllService AI Logo"
-                            className="h-full w-full object-cover"
-                        />
-                    </div>
-                    <CardTitle className="text-3xl font-light text-center bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                        AllService AI
+                    <CardTitle className="text-3xl font-light text-center text-primary">
+                        Clinic Darc AI
                     </CardTitle>
                     <CardDescription className="text-center text-muted-foreground">
                         Insira sua credencial de acesso

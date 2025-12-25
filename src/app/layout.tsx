@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 import { Toaster } from "@/components/ui/sonner"
 
 export const metadata: Metadata = {
-  title: "AllService AI",
+  title: "Clinic Darc AI",
   description: "Plataforma de Gestão de Leads Jurídicos",
   icons: {
     icon: "/icon.png",

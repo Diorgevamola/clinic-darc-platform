@@ -25,16 +25,16 @@ export function StatsCards({ stats }: StatsCardsProps) {
                     inactiveZone={0.01}
                     borderWidth={3}
                 />
-                <Card className="relative h-full bg-black/40 backdrop-blur-md shadow-none border border-white/5">
+                <Card className="relative h-full bg-card/60 backdrop-blur-md shadow-sm border border-border">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-light text-zinc-400">
+                        <CardTitle className="text-sm font-light text-muted-foreground">
                             Leads Qualificados Enviados
                         </CardTitle>
                         <CheckCircle className="h-4 w-4 text-green-400/80" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-extralight tracking-tight text-white">{stats.qualified}</div>
-                        <p className="text-xs text-zinc-500 font-light mt-1">
+                        <div className="text-3xl font-extralight tracking-tight text-foreground">{stats.qualified}</div>
+                        <p className="text-xs text-muted-foreground/80 font-light mt-1">
                             Enviados para advogados
                         </p>
                     </CardContent>
@@ -50,16 +50,16 @@ export function StatsCards({ stats }: StatsCardsProps) {
                     inactiveZone={0.01}
                     borderWidth={3}
                 />
-                <Card className="relative h-full bg-black/40 backdrop-blur-md shadow-none border border-white/5">
+                <Card className="relative h-full bg-card/60 backdrop-blur-md shadow-sm border border-border">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-light text-zinc-400">
+                        <CardTitle className="text-sm font-light text-muted-foreground">
                             Total de Leads Atendidos
                         </CardTitle>
                         <Users className="h-4 w-4 text-blue-400/80" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-extralight tracking-tight text-white">{stats.total}</div>
-                        <p className="text-xs text-zinc-500 font-light mt-1">
+                        <div className="text-3xl font-extralight tracking-tight text-foreground">{stats.total}</div>
+                        <p className="text-xs text-muted-foreground/80 font-light mt-1">
                             Todas as conversas iniciadas
                         </p>
                     </CardContent>
@@ -75,16 +75,16 @@ export function StatsCards({ stats }: StatsCardsProps) {
                     inactiveZone={0.01}
                     borderWidth={3}
                 />
-                <Card className="relative h-full bg-black/40 backdrop-blur-md shadow-none border border-white/5">
+                <Card className="relative h-full bg-card/60 backdrop-blur-md shadow-sm border border-border">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-light text-zinc-400">
+                        <CardTitle className="text-sm font-light text-muted-foreground">
                             Leads Desqualificados
                         </CardTitle>
                         <XCircle className="h-4 w-4 text-red-400/80" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-extralight tracking-tight text-white">{stats.disqualified}</div>
-                        <p className="text-xs text-zinc-500 font-light mt-1">
+                        <div className="text-3xl font-extralight tracking-tight text-foreground">{stats.disqualified}</div>
+                        <p className="text-xs text-muted-foreground/80 font-light mt-1">
                             Não avançaram no funil
                         </p>
                     </CardContent>

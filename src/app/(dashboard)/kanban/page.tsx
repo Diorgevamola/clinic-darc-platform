@@ -4,7 +4,7 @@ import KanbanClient from "./client"
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 
 export const metadata = {
-    title: "Kanban | AllService AI",
+    title: "Kanban | Clinic Darc AI",
     description: "Gerencie seus leads de forma visual",
 }
 

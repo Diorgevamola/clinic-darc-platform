@@ -51,7 +51,7 @@ interface SidebarProps {
 
 export function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
     const [collapsed, setCollapsed] = useState(false);
-    const [officeName, setOfficeName] = useState<string>("AllService AI");
+    const [officeName, setOfficeName] = useState<string>("Clinic Darc AI");
     const pathname = usePathname();
 
     useEffect(() => {
@@ -101,7 +101,7 @@ export function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="md:hidden h-8 w-8 text-zinc-400"
+                    className="md:hidden h-8 w-8 text-muted-foreground"
                     onClick={onMobileClose}
                 >
                     <X className="h-5 w-5" />
@@ -127,7 +127,7 @@ export function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                             onClick={handleNavClick}
                             className={cn(
                                 "flex items-center gap-4 rounded-xl px-4 py-3 text-sm font-light tracking-wide transition-all hover:bg-white/5 hover:text-white",
-                                isActive ? "bg-white/5 text-white shadow-[0_0_20px_rgba(255,255,255,0.02)] border border-white/5" : "text-zinc-400",
+                                isActive ? "bg-white/5 text-foreground shadow-[0_0_20px_rgba(255,255,255,0.02)] border border-white/5" : "text-muted-foreground",
                                 collapsed && "justify-center px-2"
                             )}
                         >
@@ -170,7 +170,7 @@ export function MobileHeader({ onMenuClick, officeName }: { onMenuClick: () => v
                 variant="ghost"
                 size="icon"
                 onClick={onMenuClick}
-                className="text-zinc-400 hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
             >
                 <Menu className="h-6 w-6" />
             </Button>
