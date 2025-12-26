@@ -2,12 +2,11 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { createClient } from '@supabase/supabase-js';
+
+import { createClient } from '@/lib/supabase';
 import { redirect } from 'next/navigation';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient();
 
 export async function loginAction(prevState: any, formData: FormData) {
     const phone = formData.get('phone') as string;
