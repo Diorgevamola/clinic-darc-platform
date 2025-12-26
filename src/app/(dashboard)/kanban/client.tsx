@@ -199,7 +199,7 @@ export default function KanbanClient({ initialLeads }: { initialLeads: Lead[] })
 
         // Update in Supabase
         try {
-            const res = await updateLeadStatus(updatedLead.id, finish.id)
+            const res = await updateLeadStatus(updatedLead.id as any, finish.id)
             if (!res.success) {
                 toast.error("Erro ao atualizar status: " + res.error)
                 // Rollback? Usually better to just show error and let user retry
