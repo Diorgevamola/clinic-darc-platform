@@ -7,12 +7,12 @@ export async function GET() {
     const tablesToCheck = [
         'empresa',
         'leads',
-        'TeuCliente',
+        'atendente',
         'numero_dos_atendentes',
         'Todos os clientes'
     ];
 
-    const results = {};
+    const results: Record<string, string> = {};
 
     for (const table of tablesToCheck) {
         const { error } = await supabase.from(table).select('*').limit(1);
