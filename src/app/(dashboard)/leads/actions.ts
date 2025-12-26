@@ -15,7 +15,7 @@ export async function getLeads(startDate?: string, endDate?: string, area?: stri
     const supabase = createClient();
 
     let query = supabase
-        .from('Todos os clientes')
+        .from('leads')
         .select('id, nome, telefone, Status, created_at, status, area', { count: 'exact' })
         .eq('ID_empresa', userId)
         .order('created_at', { ascending: false });

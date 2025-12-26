@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { loginAction } from "@/app/actions";
 import { useFormStatus } from "react-dom";
-import { useState } from "react";
+import { useState, useActionState } from "react";
 import Image from "next/image";
 
 function SubmitButton() {
@@ -18,14 +18,8 @@ function SubmitButton() {
 }
 
 export default function LoginPage() {
-    const [errorMessage, setErrorMessage] = useState('');
-
-    async function handleSubmit(formData: FormData) {
-        const result = await loginAction(formData);
-        if (result?.error) {
-            setErrorMessage(result.error);
-        }
-    }
+    const [state, formAction] = useActionState(loginAction, null);
+    const errorMessage = state?.error;
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -39,7 +33,7 @@ export default function LoginPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form action={handleSubmit} className="space-y-4">
+                    <form action={formAction} className="space-y-4">
                         <div className="space-y-2">
                             <label htmlFor="phone" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                 Número de Telefone (ex: 55619...)

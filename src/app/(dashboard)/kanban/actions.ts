@@ -15,44 +15,31 @@ export async function getKanbanLeads() {
     const supabase = createClient();
 
     const { data, error } = await supabase
-        .from('Todos os clientes')
-        .select(`
-            id, 
-            nome, 
-            telefone, 
-            Status, 
-            created_at,
-            "resumo da conversa",
-            t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12,
-            follow_up_1_enviado,
-            follow_up_2_enviado,
-            IA_responde
-        `)
-        .eq('ID_empresa', userId)
-        .order('created_at', { ascending: false });
+        .from('leads')
+        .select('*')
+        .eq('ID_empresa', userId);
 
     if (error) {
-        console.error("Erro ao carregar leads para Kanban:", error);
+        console.error("Error fetching leads for kanban:", error);
         return [];
     }
 
     return data;
 }
 
-export async function updateLeadStatus(leadId: string | number, newStatus: string) {
+export async function updateLeadStatus(id: number, status: string) {
     const cookieStore = await cookies();
     const session = cookieStore.get('session');
 
-    if (!session || !session.value) {
-        throw new Error("Usuário não autenticado");
-    }
+    if (!session?.value) return { success: false, error: "Unauthorized" };
 
     const supabase = createClient();
 
     const { error } = await supabase
-        .from('Todos os clientes')
-        .update({ Status: newStatus })
-        .eq('id', leadId);
+        .from('leads')
+        .update({ Status: status })
+        .eq('id', id)
+        .eq('ID_empresa', session.value);
 
     if (error) {
         console.error("Erro ao atualizar status do lead:", error);

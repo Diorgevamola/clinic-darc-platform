@@ -15,7 +15,7 @@ export async function getUserProfile() {
     const supabase = createClient();
 
     const { data, error } = await supabase
-        .from('numero_dos_atendentes')
+        .from('empresa')
         .select('*')
         .eq('id', userId)
         .single();
@@ -40,17 +40,15 @@ export async function updateUserProfile(formData: FormData) {
     const supabase = createClient();
 
     const updates = {
-        "Escritório": formData.get("escritorio"),
-        "Nome do advogado": formData.get("nome_advogado"),
-        "Endereço": formData.get("endereco"),
-        "Tempo até alguém entrar em contato": formData.get("tempo_contato"),
-        "link da planilha": formData.get("link_planilha"),
-        "token_uazapi": formData.get("token_uazapi"),
+        "nome": formData.get("nome"),
+        "endereco": formData.get("endereco"),
+        "token_wpp": formData.get("token_wpp"),
         "telefone": formData.get("telefone"),
+        "url_uazapi": formData.get("url_uazapi"),
     };
 
     const { error } = await supabase
-        .from('numero_dos_atendentes')
+        .from('empresa')
         .update(updates)
         .eq('id', userId);
 
@@ -66,7 +64,7 @@ export async function getInstanceStatus() {
     try {
         const profile = await getUserProfile();
 
-        if (!profile.token_uazapi || !profile.url_uazapi) {
+        if (!profile.token_wpp || !profile.url_uazapi) {
             return { state: 'disconnected', error: "Configurações incompletas" };
         }
 
@@ -81,7 +79,7 @@ export async function getInstanceStatus() {
         const response = await fetch(endpoint, {
             method: 'GET',
             headers: {
-                'token': profile.token_uazapi,
+                'token': profile.token_wpp,
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },

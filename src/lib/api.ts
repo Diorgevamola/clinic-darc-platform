@@ -33,9 +33,9 @@ export async function fetchDashboardData(startDate?: string, endDate?: string, a
         return { qualified: 0, total: 0, disqualified: 0, funnel: [], stepConversion: [] };
     }
 
-    // Fetch 'Todos os clientes' based on created_at AND ID_empresa
+    // Fetch 'leads' based on created_at AND ID_empresa
     let query = supabase
-        .from('Todos os clientes')
+        .from('leads')
         .select('*')
         .eq('ID_empresa', userId);
 
@@ -115,7 +115,7 @@ export async function getAvailableScripts() {
     }
 
     const { data, error } = await supabase
-        .from('numero_dos_atendentes')
+        .from('empresa')
         .select('area_1, area_2, area_3, area_4, area_5, area_6')
         .eq('id', userId)
         .single();

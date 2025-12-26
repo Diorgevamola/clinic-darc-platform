@@ -48,19 +48,24 @@ export function LeadsOverTimeChart({ startDate, endDate }: { startDate?: string,
     }, [startDate, endDate])
 
     const getX = (index: number) => {
-        if (data.length < 2) return padding.left
+        if (data.length <= 1) return (width - padding.left - padding.right) / 2 + padding.left
         return padding.left + (index / (data.length - 1)) * (width - padding.left - padding.right)
     }
 
     const getY = (value: number) => {
         const maxValue = Math.max(1, ...data.map(d => d.total));
-        // Add 10% buffering on top
         const effectiveMax = maxValue * 1.1;
         return height - padding.bottom - (value / effectiveMax) * (height - padding.top - padding.bottom)
     }
 
     const getPath = (key: keyof ChartData) => {
-        if (data.length < 2) return ""
+        if (data.length === 0) return ""
+        if (data.length === 1) {
+            const x = getX(0)
+            const y = getY(data[0][key] as number)
+            // Draw a very short horizontal line to simulate a point
+            return `M ${x - 5},${y} L ${x + 5},${y}`
+        }
         return data
             .map((point, i) => {
                 const x = getX(i)
@@ -131,7 +136,7 @@ export function LeadsOverTimeChart({ startDate, endDate }: { startDate?: string,
                     }}
                 >
                     <div>
-                        <h2 className="text-2xl font-light text-foreground mb-1">
+                        <h2 className="text-2xl font-normal text-foreground mb-1">
                             Evolução de Leads
                         </h2>
                         <p className="text-sm text-muted-foreground">Desempenho no período selecionado</p>
@@ -280,7 +285,7 @@ export function LeadsOverTimeChart({ startDate, endDate }: { startDate?: string,
                         <div
                             style={{
                                 position: "absolute",
-                                left: `${(data.indexOf(hoveredPoint) / (data.length - 1)) * 100}%`,
+                                left: data.length <= 1 ? "50%" : `${(data.indexOf(hoveredPoint) / (data.length - 1)) * 100}%`,
                                 top: "10px",
                                 transform: "translateX(-50%)",
                                 pointerEvents: "none",

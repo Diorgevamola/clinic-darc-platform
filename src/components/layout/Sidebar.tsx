@@ -81,7 +81,7 @@ export function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
         <motion.div
             initial={{ width: 240 }}
             animate={{ width: collapsed ? 100 : 280 }}
-            className="relative flex h-screen flex-col border-r border-white/5 bg-black/60 backdrop-blur-xl text-zinc-100 transition-all duration-300"
+            className="relative flex h-screen flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300"
         >
             <div className="flex h-16 items-center justify-between px-4">
                 {!collapsed && (
@@ -89,7 +89,7 @@ export function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="text-lg font-light truncate bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+                        className="text-lg font-normal truncate bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
                     >
                         {officeName}
                     </motion.span>
@@ -101,7 +101,7 @@ export function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="md:hidden h-8 w-8 text-muted-foreground"
+                    className="md:hidden h-8 w-8 text-sidebar-foreground"
                     onClick={onMobileClose}
                 >
                     <X className="h-5 w-5" />
@@ -126,8 +126,8 @@ export function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                             href={item.href}
                             onClick={handleNavClick}
                             className={cn(
-                                "flex items-center gap-4 rounded-xl px-4 py-3 text-sm font-light tracking-wide transition-all hover:bg-white/5 hover:text-white",
-                                isActive ? "bg-white/5 text-foreground shadow-[0_0_20px_rgba(255,255,255,0.02)] border border-white/5" : "text-muted-foreground",
+                                "flex items-center gap-4 rounded-xl px-4 py-3 text-sm font-normal tracking-wide transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                                isActive ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm border border-sidebar-border" : "text-muted-foreground",
                                 collapsed && "justify-center px-2"
                             )}
                         >
@@ -170,11 +170,11 @@ export function MobileHeader({ onMenuClick, officeName }: { onMenuClick: () => v
                 variant="ghost"
                 size="icon"
                 onClick={onMenuClick}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-sidebar-foreground hover:text-sidebar-accent-foreground"
             >
                 <Menu className="h-6 w-6" />
             </Button>
-            <span className="text-sm font-light bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <span className="text-sm font-normal bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 {officeName}
             </span>
             <div className="w-10" /> {/* Spacer for centering */}

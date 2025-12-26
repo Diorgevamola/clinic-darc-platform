@@ -90,12 +90,13 @@ export default function DashboardPage() {
     loadData();
   }, [dateRange, selectedArea]);
 
-  // Set default date range to Today on mount if needed, or keep empty to show "Selecione uma data"
+  // Set default date range to last 7 days on mount
   useEffect(() => {
-    // Set default to today
+    const end = new Date();
+    const start = subDays(end, 7);
     setDateRange({
-      from: new Date(),
-      to: new Date()
+      from: start,
+      to: end
     });
   }, []);
 

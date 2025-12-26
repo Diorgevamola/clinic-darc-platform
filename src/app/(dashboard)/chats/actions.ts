@@ -13,11 +13,12 @@ async function getCredentials() {
         throw new Error("Usuário não autenticado");
     }
 
+    const userId = parseInt(session.value); // Added this line
     const supabase = createClient();
     const { data, error } = await supabase
-        .from('numero_dos_atendentes')
-        .select('token_uazapi, url_uazapi')
-        .eq('id', session.value)
+        .from('empresa')
+        .select('url_uazapi, token_wpp')
+        .eq('id', userId)
         .single();
 
     if (error || !data) {
@@ -25,12 +26,12 @@ async function getCredentials() {
         throw new Error(`Credenciais Uazapi não encontradas. Error: ${error?.message || 'Data missing'}`);
     }
 
-    if (!data.token_uazapi || !data.url_uazapi) {
+    if (!data.token_wpp || !data.url_uazapi) {
         throw new Error("Token ou URL da Uazapi não configurados para este usuário.");
     }
 
     return {
-        token: data.token_uazapi,
+        token: data.token_wpp,
         url: data.url_uazapi
     };
 }
@@ -88,7 +89,7 @@ export async function fetchChats(page: number = 1, limit: number = 20): Promise<
                 const phones = chats.map(c => (c.phone || c.wa_chatid.split('@')[0]).replace(/\D/g, ''));
 
                 const { data: leadStatuses } = await supabase
-                    .from('Todos os clientes')
+                    .from('leads')
                     .select('telefone, IA_responde, Status, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12')
                     .eq('ID_empresa', userId)
                     .in('telefone', phones);
@@ -186,7 +187,7 @@ export async function getLeadDetails(phone: string) {
 
         // Try to find the lead
         const { data, error } = await supabase
-            .from('Todos os clientes')
+            .from('leads')
             .select('*')
             .eq('ID_empresa', userId)
             .eq('telefone', sanitizedPhone)
@@ -291,7 +292,7 @@ export async function toggleLeadAI(phone: string, isEnabled: boolean) {
 
         // Check if lead exists first or update directly
         const { data, error } = await supabase
-            .from('Todos os clientes')
+            .from('leads')
             .update({ 'IA_responde': isEnabled })
             .eq('ID_empresa', userId)
             .eq('telefone', sanitizedPhone)
@@ -317,7 +318,7 @@ export async function resendLatestMessages(name: string, phone: string, text: st
 
         const supabase = createClient();
         const { data: attendant, error } = await supabase
-            .from('numero_dos_atendentes')
+            .from('empresa')
             .select('id, telefone')
             .eq('id', session.value)
             .single();
@@ -371,7 +372,7 @@ export async function updateLeadStatus(phone: string, newStatus: string) {
 
         // Update lead status
         const { data, error } = await supabase
-            .from('Todos os clientes')
+            .from('leads')
             .update({ 'Status': newStatus })
             .eq('ID_empresa', userId)
             .eq('telefone', sanitizedPhone)

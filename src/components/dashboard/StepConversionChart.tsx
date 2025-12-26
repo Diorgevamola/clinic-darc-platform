@@ -41,13 +41,13 @@ export function StepConversionChart({ data }: StepConversionChartProps) {
                                 domain={[0, 100]}
                             />
                             <Tooltip
-                                cursor={{ fill: 'hsl(0 0% 12%)' }}
+                                cursor={{ fill: 'var(--muted)' }}
                                 contentStyle={{
-                                    backgroundColor: 'hsl(0 0% 4%)',
+                                    backgroundColor: 'var(--popover)',
                                     borderRadius: '8px',
-                                    border: '1px solid hsl(0 0% 12%)',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                                    color: 'hsl(210 40% 98%)'
+                                    border: '1px solid var(--border)',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                    color: 'var(--popover-foreground)'
                                 }}
                                 formatter={(value: number, name: string, props: any) => {
                                     if (name === "Taxa") return [`${value}%`, "Conversão"];

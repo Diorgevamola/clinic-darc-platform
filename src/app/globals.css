@@ -88,16 +88,14 @@
   --chart-4: hsl(280 20% 50%);
   --chart-5: hsl(340 30% 50%);
 
-  --sidebar: hsl(215 30% 25%);
-  /* Darker Blue for Sidebar */
-  --sidebar-foreground: hsl(210 20% 98%);
+  --sidebar: hsl(210 20% 98%);
+  --sidebar-foreground: hsl(220 20% 20%);
   --sidebar-primary: hsl(40 40% 60%);
-  /* Gold Accent in Sidebar */
   --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(215 30% 35%);
-  --sidebar-accent-foreground: hsl(210 20% 98%);
-  --sidebar-border: hsl(215 30% 35%);
-  --sidebar-ring: hsl(40 40% 60%);
+  --sidebar-accent: hsl(210 10% 92%);
+  --sidebar-accent-foreground: hsl(220 20% 20%);
+  --sidebar-border: hsl(220 13% 91%);
+  --sidebar-ring: hsl(215 20% 65%);
 
   /* Glassmorphism Variables */
   --glass-bg: rgba(255, 255, 255, 0.7);

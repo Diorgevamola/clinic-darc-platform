@@ -11,13 +11,11 @@ import { Loader2, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface ProfileData {
-    "Escritório": string;
-    "Nome do advogado": string;
-    "Endereço": string;
-    "Tempo até alguém entrar em contato": string;
-    "link da planilha": string;
-    "token_uazapi": string;
+    "nome": string;
+    "endereco": string;
+    "token_wpp": string;
     "telefone": string;
+    "url_uazapi": string;
     [key: string]: any;
 }
 
@@ -118,7 +116,7 @@ export default function ProfilePage() {
         <div className="max-w-2xl mx-auto space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h1 className="text-3xl font-light tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                    {profile["Escritório"] || "Meu Perfil"}
+                    {profile["nome"] || "Meu Perfil"}
                 </h1>
 
                 {/* Status Indicator */}
@@ -160,21 +158,11 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="escritorio">Nome do Escritório</Label>
+                            <Label htmlFor="nome">Nome</Label>
                             <Input
-                                id="escritorio"
-                                name="escritorio"
-                                defaultValue={profile["Escritório"] || ''}
-                                placeholder="Ex: Silva & Souza Advogados"
-                            />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="nome_advogado">Nome do Advogado Principal</Label>
-                            <Input
-                                id="nome_advogado"
-                                name="nome_advogado"
-                                defaultValue={profile["Nome do advogado"] || ''}
+                                id="nome"
+                                name="nome"
+                                defaultValue={profile["nome"] || ''}
                                 placeholder="Nome completo"
                             />
                         </div>
@@ -184,39 +172,31 @@ export default function ProfilePage() {
                             <Input
                                 id="endereco"
                                 name="endereco"
-                                defaultValue={profile["Endereço"] || ''}
+                                defaultValue={profile["endereco"] || ''}
                                 placeholder="Endereço comercial completo"
                             />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="tempo_contato">Tempo de Contato</Label>
+                            <Label htmlFor="url_uazapi">URL Uazapi</Label>
                             <Input
-                                id="tempo_contato"
-                                name="tempo_contato"
-                                defaultValue={profile["Tempo até alguém entrar em contato"] || ''}
-                                placeholder="Ex: 24 horas"
+                                id="url_uazapi"
+                                name="url_uazapi"
+                                defaultValue={profile["url_uazapi"] || ''}
+                                placeholder="https://api..."
+                                className="bg-background/50"
                             />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="token_uazapi">Token Uazapi</Label>
+                            <Label htmlFor="token_wpp">Token Wpp</Label>
                             <Input
-                                id="token_uazapi"
-                                name="token_uazapi"
-                                defaultValue={profile["token_uazapi"] || ''}
-                                placeholder="Token da API"
-                                type="password"
-                            />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="link_planilha">Link da Planilha</Label>
-                            <Input
-                                id="link_planilha"
-                                name="link_planilha"
-                                defaultValue={profile["link da planilha"] || ''}
-                                placeholder="URL da planilha Google Sheets"
+                                id="token_wpp"
+                                name="token_wpp"
+                                type="text"
+                                defaultValue={profile["token_wpp"] || ''}
+                                placeholder="Insira o seu token..."
+                                className="bg-background/50 border-primary/20 focus:border-primary/50"
                             />
                         </div>
 
