@@ -20,7 +20,12 @@ export async function loginAction(prevState: any, formData: FormData) {
 
     // Verify phone against database
     try {
-        console.log('Querying supabase for phone:', phone);
+        // DEBUG: Log the Supabase URL to confirm which instance is being used
+        const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'UNDEFINED';
+        console.log('--- DEBUG CONNECTION ---');
+        console.log('Connecting to Supabase URL:', sbUrl);
+        console.log('Querying phone:', phone);
+
         const { data, error } = await supabase
             .from('empresa')
             .select('id, nome')
