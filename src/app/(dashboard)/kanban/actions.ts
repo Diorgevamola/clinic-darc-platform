@@ -27,7 +27,7 @@ export async function getKanbanLeads() {
     return data;
 }
 
-export async function updateLeadStatus(id: number, status: string) {
+export async function updateLeadStatus(id: number | string, status: string) {
     const cookieStore = await cookies();
     const session = cookieStore.get('session');
 
