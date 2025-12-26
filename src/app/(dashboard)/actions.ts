@@ -28,7 +28,7 @@ export async function getLeadsOverTimeData(startDateStr?: string, endDateStr?: s
     const { data, error } = await supabase
         .from('leads')
         .select('created_at, Status')
-        .eq('ID_empresa', userId)
+        .eq('id_empresa', userId)
         .gte('created_at', safeStart.toISOString())
         .lte('created_at', safeEnd.toISOString())
         .order('created_at', { ascending: true });

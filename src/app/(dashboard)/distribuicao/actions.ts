@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 
-export interface TeuCliente {
+export interface Atendente {
     id: number;
     created_at?: string;
     Nome: string;
@@ -28,20 +28,22 @@ export async function getDistributionList() {
 
     // Filter by id_numero matching the logged-in user's ID
     const { data, error } = await supabase
-        .from('TeuCliente')
+        .from('atendente')
         .select('*')
         .eq('id_numero', userId)
         .order('Nome', { ascending: true });
 
     if (error) {
-        console.error("Error fetching distribution list:", error);
+        console.error("Error fetching distribution list - Code:", error.code);
+        console.error("Error fetching distribution list - Message:", error.message);
+        console.error("Error details:", error.details);
         return { success: false, error: error.message };
     }
 
-    return { success: true, data: data as TeuCliente[] };
+    return { success: true, data: data as Atendente[] };
 }
 
-export async function saveDistributionNumber(data: Partial<TeuCliente>) {
+export async function saveDistributionNumber(data: Partial<Atendente>) {
     const supabase = createClient();
     const cookieStore = await cookies();
     const session = cookieStore.get('session');
@@ -74,14 +76,14 @@ export async function saveDistributionNumber(data: Partial<TeuCliente>) {
     if (data.id) {
         // Update
         result = await supabase
-            .from('TeuCliente')
+            .from('atendente')
             .update(payload)
             .eq('id', data.id)
             .eq('id_numero', userId); // Security check
     } else {
         // Insert
         result = await supabase
-            .from('TeuCliente')
+            .from('atendente')
             .insert([payload]);
     }
 

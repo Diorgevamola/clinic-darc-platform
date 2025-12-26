@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { TeuCliente, saveDistributionNumber, deleteDistributionNumber } from './actions';
+import { Atendente, saveDistributionNumber, deleteDistributionNumber } from './actions';
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Search, Phone as PhoneIcon } from 'lucide-react';
 import { Input } from "@/components/ui/input";
@@ -35,11 +35,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-export default function DistributionClient({ initialData }: { initialData: TeuCliente[] }) {
-    const [data, setData] = useState<TeuCliente[]>(initialData);
+export default function DistributionClient({ initialData }: { initialData: Atendente[] }) {
+    const [data, setData] = useState<Atendente[]>(initialData);
     const [searchQuery, setSearchQuery] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingItem, setEditingItem] = useState<TeuCliente | null>(null);
+    const [editingItem, setEditingItem] = useState<Atendente | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
 
@@ -48,14 +48,14 @@ export default function DistributionClient({ initialData }: { initialData: TeuCl
     const [formData, setFormData] = useState({ name: '', phone: '', spreadsheetLink: '' });
 
     // Delete state
-    const [itemToDelete, setItemToDelete] = useState<TeuCliente | null>(null);
+    const [itemToDelete, setItemToDelete] = useState<Atendente | null>(null);
 
     const filteredData = data.filter(item =>
         item.Nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.Telefone.includes(searchQuery)
     );
 
-    function handleOpenDialog(item?: TeuCliente) {
+    function handleOpenDialog(item?: Atendente) {
         if (item) {
             setEditingItem(item);
             setFormData({

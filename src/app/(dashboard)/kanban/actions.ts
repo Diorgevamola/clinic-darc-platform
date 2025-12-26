@@ -17,7 +17,7 @@ export async function getKanbanLeads() {
     const { data, error } = await supabase
         .from('leads')
         .select('*')
-        .eq('ID_empresa', userId);
+        .eq('id_empresa', userId);
 
     if (error) {
         console.error("Error fetching leads for kanban:", error);
@@ -39,7 +39,7 @@ export async function updateLeadStatus(id: number | string, status: string) {
         .from('leads')
         .update({ Status: status })
         .eq('id', id)
-        .eq('ID_empresa', session.value);
+        .eq('id_empresa', session.value);
 
     if (error) {
         console.error("Erro ao atualizar status do lead:", error);

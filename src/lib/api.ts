@@ -37,7 +37,7 @@ export async function fetchDashboardData(startDate?: string, endDate?: string, a
     let query = supabase
         .from('leads')
         .select('*')
-        .eq('ID_empresa', userId);
+        .eq('id_empresa', userId);
 
     if (startDate && endDate) {
         query = query.gte('created_at', startDate).lte('created_at', endDate);
@@ -116,11 +116,11 @@ export async function getAvailableScripts() {
 
     const { data, error } = await supabase
         .from('empresa')
-        .select('area_1, area_2, area_3, area_4, area_5, area_6')
+        .select('*')
         .eq('id', userId)
         .single();
 
-    if (error) {
+    if (error || !data) {
         console.error("Erro ao buscar scripts:", error);
         return [];
     }
@@ -132,7 +132,7 @@ export async function getAvailableScripts() {
         data.area_4,
         data.area_5,
         data.area_6
-    ].filter(a => a && a.trim() !== '');
+    ].filter(a => a && typeof a === 'string' && a.trim() !== '');
 
     return Array.from(new Set(areas));
 }

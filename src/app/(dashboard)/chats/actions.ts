@@ -91,7 +91,7 @@ export async function fetchChats(page: number = 1, limit: number = 20): Promise<
                 const { data: leadStatuses } = await supabase
                     .from('leads')
                     .select('telefone, IA_responde, Status, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12')
-                    .eq('ID_empresa', userId)
+                    .eq('id_empresa', userId)
                     .in('telefone', phones);
 
                 if (leadStatuses) {
@@ -189,7 +189,7 @@ export async function getLeadDetails(phone: string) {
         const { data, error } = await supabase
             .from('leads')
             .select('*')
-            .eq('ID_empresa', userId)
+            .eq('id_empresa', userId)
             .eq('telefone', sanitizedPhone)
             .maybeSingle();
 
@@ -294,7 +294,7 @@ export async function toggleLeadAI(phone: string, isEnabled: boolean) {
         const { data, error } = await supabase
             .from('leads')
             .update({ 'IA_responde': isEnabled })
-            .eq('ID_empresa', userId)
+            .eq('id_empresa', userId)
             .eq('telefone', sanitizedPhone)
             .select();
 
@@ -374,7 +374,7 @@ export async function updateLeadStatus(phone: string, newStatus: string) {
         const { data, error } = await supabase
             .from('leads')
             .update({ 'Status': newStatus })
-            .eq('ID_empresa', userId)
+            .eq('id_empresa', userId)
             .eq('telefone', sanitizedPhone)
             .select();
 

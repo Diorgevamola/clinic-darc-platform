@@ -33,8 +33,12 @@ export async function loginAction(prevState: any, formData: FormData) {
             .single();
 
         if (error) {
-            console.error('Supabase error:', error);
-            return { error: 'Erro ao verificar telefone' };
+            console.error('--- SUPABASE ERROR DETAILS ---');
+            console.error('Message:', error.message);
+            console.error('Code:', error.code);
+            console.error('Details:', error.details);
+            console.error('Hint:', error.hint);
+            return { error: `Erro na base de dados: ${error.message}` };
         }
 
         if (!data) {
