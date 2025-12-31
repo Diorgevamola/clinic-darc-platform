@@ -77,9 +77,9 @@
   --destructive: hsl(0 62.8% 30.6%);
   --destructive-foreground: hsl(210 40% 98%);
 
-  --border: hsl(210 10% 90%);
-  /* Soft Grey */
-  --input: hsl(210 10% 90%);
+  --border: hsl(210 10% 80%);
+  /* More visible grey */
+  --input: hsl(210 10% 85%);
   --ring: hsl(215 35% 30%);
 
   --chart-1: hsl(215 35% 30%);
@@ -94,12 +94,12 @@
   --sidebar-primary-foreground: hsl(0 0% 100%);
   --sidebar-accent: hsl(210 10% 92%);
   --sidebar-accent-foreground: hsl(220 20% 20%);
-  --sidebar-border: hsl(220 13% 91%);
+  --sidebar-border: hsl(220 13% 85%);
   --sidebar-ring: hsl(215 20% 65%);
 
   /* Glassmorphism Variables */
   --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.8);
   --glass-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
 }
 
@@ -122,8 +122,8 @@
   --accent-foreground: hsl(210 20% 98%);
   --destructive: hsl(0 62.8% 30.6%);
   --destructive-foreground: hsl(210 20% 98%);
-  --border: hsl(220 20% 25%);
-  --input: hsl(220 20% 25%);
+  --border: hsl(220 20% 35%);
+  --input: hsl(220 20% 35%);
   --ring: hsl(215 35% 40%);
   --chart-1: hsl(215 35% 40%);
   --chart-2: hsl(40 40% 60%);
@@ -136,7 +136,7 @@
   --sidebar-primary-foreground: hsl(0 0% 100%);
   --sidebar-accent: hsl(220 20% 20%);
   --sidebar-accent-foreground: hsl(210 20% 98%);
-  --sidebar-border: hsl(220 20% 20%);
+  --sidebar-border: hsl(220 20% 30%);
   --sidebar-ring: hsl(215 35% 40%);
 }
 

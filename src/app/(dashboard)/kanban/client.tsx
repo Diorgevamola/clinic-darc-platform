@@ -310,13 +310,6 @@ export default function KanbanClient({ initialLeads }: { initialLeads: Lead[] })
                                                                     {lead.nome || "Lead sem nome"}
                                                                 </span>
                                                                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    <Link
-                                                                        href={`/chats?phone=${lead.telefone}`}
-                                                                        onClick={(e) => e.stopPropagation()}
-                                                                        className="p-1.5 rounded-lg bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
-                                                                    >
-                                                                        <MessageCircle className="w-4 h-4" />
-                                                                    </Link>
                                                                     <div className="p-1.5 rounded-lg bg-muted text-muted-foreground">
                                                                         <Info className="w-4 h-4" />
                                                                     </div>
@@ -385,15 +378,6 @@ export default function KanbanClient({ initialLeads }: { initialLeads: Lead[] })
                                     </div>
                                 </div>
                                 <div className="flex gap-3">
-                                    <Button
-                                        asChild
-                                        className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl border-none shadow-md"
-                                    >
-                                        <Link href={`/chats?phone=${selectedLead.telefone}`}>
-                                            <MessageCircle className="mr-2 w-4 h-4" />
-                                            Atendimento
-                                        </Link>
-                                    </Button>
                                     <Badge className={`${getStatusColor(selectedLead.Status)} bg-opacity-10 text-foreground border border-border py-2 px-4 rounded-xl text-xs uppercase tracking-widest font-bold`}>
                                         {selectedLead.Status}
                                     </Badge>

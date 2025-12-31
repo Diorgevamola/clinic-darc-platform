@@ -27,7 +27,7 @@ export async function loginAction(prevState: any, formData: FormData) {
         console.log('Querying phone:', phone);
 
         const { data, error } = await supabase
-            .from('empresa')
+            .from('empresas')
             .select('id, nome')
             .eq('telefone', phone)
             .single();

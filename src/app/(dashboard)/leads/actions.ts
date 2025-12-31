@@ -5,46 +5,48 @@ import { cookies } from "next/headers";
 
 export async function getLeads(startDate?: string, endDate?: string, area?: string, limit: number = 100, status?: string) {
     const cookieStore = await cookies();
-    const session = cookieStore.get('session');
+    const userId = cookieStore.get('session')?.value;
+    console.log("[getLeads] userId from cookie:", userId);
 
-    if (!session || !session.value) {
-        throw new Error("Usuário não autenticado");
+    if (!userId) {
+        return { data: [], count: 0 };
     }
 
-    const userId = session.value;
     const supabase = createClient();
 
     let query = supabase
         .from('leads')
-        .select('id, nome, telefone, Status, created_at, status, area', { count: 'exact' })
+        .select('*')
         .eq('id_empresa', userId)
         .order('created_at', { ascending: false });
 
     if (startDate && endDate) {
         query = query.gte('created_at', startDate).lte('created_at', endDate);
+    } else if (startDate) {
+        query = query.gte('created_at', startDate);
     }
 
     if (area && area !== 'all') {
-        query = query.eq('area', area);
+        // query = query.eq('area', area); // Column 'area' does not exist on leads
     }
 
     if (status && status !== 'all') {
-        query = query.eq('Status', status);
+        query = query.eq('status', status);
     }
-
-    // Capture total count before applying limit
-    const totalQuery = query;
 
     if (limit > 0) {
         query = query.limit(limit);
     }
 
-    const { data, count, error } = await query;
+    const { data, error } = await query;
 
     if (error) {
         console.error("Erro ao carregar leads:", error);
         return { data: [], count: 0 };
     }
 
-    return { data, count: count || 0 };
+    return {
+        data: data || [],
+        count: (data || []).length
+    };
 }

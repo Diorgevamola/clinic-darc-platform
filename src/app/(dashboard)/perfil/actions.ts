@@ -15,7 +15,7 @@ export async function getUserProfile() {
     const supabase = createClient();
 
     const { data, error } = await supabase
-        .from('empresa')
+        .from('empresas')
         .select('*')
         .eq('id', userId)
         .single();
@@ -41,14 +41,11 @@ export async function updateUserProfile(formData: FormData) {
 
     const updates = {
         "nome": formData.get("nome"),
-        "endereco": formData.get("endereco"),
-        "token_wpp": formData.get("token_wpp"),
-        "telefone": formData.get("telefone"),
-        "url_uazapi": formData.get("url_uazapi"),
+        "link_planilha": formData.get("link_planilha"),
     };
 
     const { error } = await supabase
-        .from('empresa')
+        .from('empresas')
         .update(updates)
         .eq('id', userId);
 
@@ -60,57 +57,3 @@ export async function updateUserProfile(formData: FormData) {
     return { success: true };
 }
 
-export async function getInstanceStatus() {
-    try {
-        const profile = await getUserProfile();
-
-        if (!profile.token_wpp || !profile.url_uazapi) {
-            return { state: 'disconnected', error: "Configurações incompletas" };
-        }
-
-        // Endpoint usually is /instance/connectionState/{instanceName}
-        // But for Uazapi often it's just /instance/connectionState with token authentication
-        // or /instance/status based on the user request.
-        // User pointed to: https://docs.uazapi.com/endpoint/get/instance~status
-        // Let's try /instance/connectionState based on common patterns, assuming instance name is inferred from token or predefined.
-        // If Uazapi uses instance name in URL, we might need it. 
-        const endpoint = `${profile.url_uazapi}/instance/status`;
-
-        const response = await fetch(endpoint, {
-            method: 'GET',
-            headers: {
-                'token': profile.token_wpp,
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            next: { revalidate: 0 }
-        });
-
-        if (!response.ok) {
-            console.error(`Uazapi status error: ${response.status}`);
-            return { state: 'error', error: `Erro API: ${response.status}` };
-        }
-
-        const data = await response.json();
-        // Handle different Uazapi/Evolution response formats
-        // Format 1: { instance: { state: 'open' } }
-        // Format 2: { status: { connected: true } }
-        let state = 'unknown';
-
-        if (data?.instance?.state) {
-            state = data.instance.state;
-        } else if (data?.status?.connected === true) {
-            state = 'open';
-        } else if (data?.status?.connected === false) {
-            state = 'close';
-        } else if (data?.state) {
-            state = data.state;
-        }
-
-        return { state, raw: data };
-
-    } catch (error: any) {
-        console.error("getInstanceStatus exception:", error);
-        return { state: 'error', error: error.message };
-    }
-}

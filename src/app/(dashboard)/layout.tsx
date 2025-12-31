@@ -14,19 +14,17 @@ export default function DashboardLayout({
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [officeName, setOfficeName] = useState("Clinic Darc AI");
 
-    const isChatsPage = pathname === '/chats';
     const isKanbanPage = pathname === '/kanban';
 
-    // Chats needs overflow-hidden to handle its own scrolling
     // Kanban needs p-0 but allows main overflow (for now, or we can move scrollbars inner)
-    const isNoPadding = isChatsPage || isKanbanPage;
+    const isNoPadding = isKanbanPage;
 
     useEffect(() => {
         async function loadProfile() {
             try {
                 const profile = await getUserProfile();
-                if (profile && profile["Escritório"]) {
-                    setOfficeName(profile["Escritório"]);
+                if (profile && profile.nome) {
+                    setOfficeName(profile.nome);
                 }
             } catch (error) {
                 console.error("Erro ao carregar nome do escritório:", error);
@@ -72,7 +70,7 @@ export default function DashboardLayout({
             )}
 
             {/* Main Content */}
-            <main className={`flex-1 ${isNoPadding ? 'p-0' : 'p-4 md:p-8'} ${isChatsPage ? 'overflow-hidden' : 'overflow-y-auto'} pt-14 md:pt-0`}>
+            <main className={`flex-1 ${isNoPadding ? 'p-0' : 'p-4 md:p-8'} overflow-y-auto pt-14 md:pt-8`}>
                 {children}
             </main>
         </div>

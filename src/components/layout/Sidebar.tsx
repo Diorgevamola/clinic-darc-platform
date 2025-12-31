@@ -27,17 +27,6 @@ const sidebarItems = [
         icon: Users,
     },
     {
-        title: "Chats",
-        href: "/chats",
-        icon: MessageSquare,
-    },
-    {
-        title: "Distribuição",
-        href: "/distribuicao",
-        icon: Users,
-    },
-
-    {
         title: "Perfil",
         href: "/perfil",
         icon: User,
@@ -58,8 +47,8 @@ export function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
         async function loadProfile() {
             try {
                 const profile = await getUserProfile();
-                if (profile && profile["Escritório"]) {
-                    setOfficeName(profile["Escritório"]);
+                if (profile && profile.nome) {
+                    setOfficeName(profile.nome);
                 }
             } catch (error) {
                 console.error("Erro ao carregar nome do escritório:", error);

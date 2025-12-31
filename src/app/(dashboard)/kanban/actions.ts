@@ -37,7 +37,7 @@ export async function updateLeadStatus(id: number | string, status: string) {
 
     const { error } = await supabase
         .from('leads')
-        .update({ Status: status })
+        .update({ status: status })
         .eq('id', id)
         .eq('id_empresa', session.value);
 

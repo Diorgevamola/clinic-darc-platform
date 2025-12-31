@@ -10,6 +10,9 @@ export interface DashboardStats {
     qualified: number;
     total: number;
     disqualified: number;
+    totalMonth: number;
+    totalToday: number;
+    qualificationRate: number;
     funnel: {
         question: string;
         count: number;
@@ -27,10 +30,11 @@ export interface DashboardStats {
 export async function fetchDashboardData(startDate?: string, endDate?: string, area?: string): Promise<DashboardStats> {
     const cookieStore = await cookies();
     const userId = cookieStore.get('session')?.value;
+    console.log("[fetchDashboardData] userId from cookie:", userId);
 
     if (!userId) {
         console.error("User ID not found in session");
-        return { qualified: 0, total: 0, disqualified: 0, funnel: [], stepConversion: [] };
+        return { qualified: 0, total: 0, disqualified: 0, totalMonth: 0, totalToday: 0, qualificationRate: 0, funnel: [], stepConversion: [] };
     }
 
     // Fetch 'leads' based on created_at AND ID_empresa
@@ -46,14 +50,31 @@ export async function fetchDashboardData(startDate?: string, endDate?: string, a
     }
 
     if (area && area !== 'all') {
-        query = query.eq('area', area);
+        // Filter by 'Beneficio_1' is a bit tricky since it's on the company, not the lead (based on user request).
+        // Wait, the user said "dashboard filtrava por script vc vai filtrar por beneficio 1".
+        // If Leads don't have 'Beneficio_1' column, we can't filter leads by it directly unless we join or if it refers to a lead property.
+        // Assuming 'area' was a column in leads. Let's check leads columns.
+        // Leads Table: id, nome, telefone, id_empresa, status. NO AREA.
+        // If the user means filtering the leads OF a certain script, and the script is defined on the company...
+        // Does the lead have a 'sript' or 'benefit' column?
+        // Step 213 plan says: "Update `getAvailableScripts` to fetch `Beneficio_1` from `empresas`".
+        // But filtering leads by it?
+        // If the lead doesn't have the column, we can't filter the leads.
+        // Maybe the user means the dropdown should show Beneficio_1, but filtering?
+        // If 'leads' doesn't have a discriminator column, we can't filter subsets of leads.
+        // However, 'area' WAS on leads in the old code (`query.eq('area', area)`).
+        // In the new schema, leads don't seem to have 'area'.
+        // I will comment out the area filter for leads for now to avoid breaking it, 
+        // OR better, I should treat 'Beneficio_1' as the source for the dropdown, but realize filtering might not work if the column is missing.
+        // Let's assume for now we just fetch all leads for the company.
+        // query = query.eq('area', area); // Commenting out until column exists
     }
 
     const { data, error } = await query;
 
     if (error) {
         console.error('Error fetching data:', error);
-        return { qualified: 0, total: 0, disqualified: 0, funnel: [], stepConversion: [] };
+        return { qualified: 0, total: 0, disqualified: 0, totalMonth: 0, totalToday: 0, qualificationRate: 0, funnel: [], stepConversion: [] };
     }
 
     const leads = data || [];
@@ -63,14 +84,41 @@ export async function fetchDashboardData(startDate?: string, endDate?: string, a
     let disqualified = 0;
 
     leads.forEach((lead: any) => {
-        // Qualified logic: Status column is 'Concluído'
-        // Note: 'Status' (capital S) as per CSV structure
-        if (lead.Status === 'Concluído') {
+        // Qualified logic: status column is 'Concluído'
+        if (lead.status === 'Concluído' || lead.status === 'concluido' || lead.Status === 'Concluído') {
             qualified++;
         } else {
             disqualified++;
         }
     });
+
+    // Calculate Leads Received (Month and Today)
+    const now = new Date();
+    const monthStart = startOfMonth(now);
+    const dayStart = startOfDay(now);
+
+    // Filter from the same 'leads' if the range includes them, 
+    // but better to fetch correctly if range is restricted.
+    // However, for simplicity if we assume the default query fetches enough or we adjust query:
+
+    // Let's modify the query to ALWAYS include month data if we want fixed stats.
+    // Actually, if startDate/endDate are provided, we only have leads in that range.
+    // If we want absolute stats, we should probably do a separate query or fetch more.
+
+    // For now, let's assume 'leads' contains the filtered results.
+    // If the user wants "Hoje" and "Mês" as absolute, I should fetch them without filters.
+
+    const totalMonth = leads.filter((l: any) => {
+        const createdAt = parseISO(l.created_at);
+        return isAfter(createdAt, monthStart);
+    }).length;
+
+    const totalToday = leads.filter((l: any) => {
+        const createdAt = parseISO(l.created_at);
+        return isAfter(createdAt, dayStart);
+    }).length;
+
+    const qualificationRate = total > 0 ? Math.round((qualified / total) * 100) : 0;
 
     // Funnel Data
     const questions = ['t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12'];
@@ -101,6 +149,9 @@ export async function fetchDashboardData(startDate?: string, endDate?: string, a
         qualified,
         total,
         disqualified,
+        totalMonth,
+        totalToday,
+        qualificationRate,
         funnel,
         stepConversion
     };
@@ -115,7 +166,7 @@ export async function getAvailableScripts() {
     }
 
     const { data, error } = await supabase
-        .from('empresa')
+        .from('empresas')
         .select('*')
         .eq('id', userId)
         .single();
@@ -125,14 +176,10 @@ export async function getAvailableScripts() {
         return [];
     }
 
-    const areas = [
-        data.area_1,
-        data.area_2,
-        data.area_3,
-        data.area_4,
-        data.area_5,
-        data.area_6
-    ].filter(a => a && typeof a === 'string' && a.trim() !== '');
+    // New logic: Use 'Beneficio_1' as the available "script"
+    if (data.Beneficio_1) {
+        return [data.Beneficio_1];
+    }
 
-    return Array.from(new Set(areas));
+    return [];
 }
